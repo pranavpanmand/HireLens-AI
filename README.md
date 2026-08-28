@@ -1,73 +1,77 @@
-# Welcome to your Lovable project
+<div align="center">
 
-## Project info
+# 🎯 HireLens AI
 
-**URL**: https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID
+### An AI-powered job portal that doesn't just list jobs — it acts as your personal career consultant.
 
-## How can I edit this code?
+[![React](https://img.shields.io/badge/Frontend-React-61DAFB?style=for-the-badge&logo=react&logoColor=black)](https://react.dev/)
+[![Node.js](https://img.shields.io/badge/Backend-Node.js-339933?style=for-the-badge&logo=node.js&logoColor=white)](https://nodejs.org/)
+[![Express](https://img.shields.io/badge/Framework-Express-000000?style=for-the-badge&logo=express&logoColor=white)](https://expressjs.com/)
+[![MongoDB](https://img.shields.io/badge/Database-MongoDB-47A248?style=for-the-badge&logo=mongodb&logoColor=white)](https://www.mongodb.com/)
+[![Gemini](https://img.shields.io/badge/AI-Google_Gemini-8E75B2?style=for-the-badge&logo=googlegemini&logoColor=white)](https://ai.google.dev/)
+[![Cloudinary](https://img.shields.io/badge/Storage-Cloudinary-3448C5?style=for-the-badge&logo=cloudinary&logoColor=white)](https://cloudinary.com/)
 
-There are several ways of editing your application.
+[![License: MIT](https://img.shields.io/badge/License-MIT-yellow.svg?style=for-the-badge)](https://opensource.org/licenses/MIT)
+[![Made with ❤️](https://img.shields.io/badge/Made%20with-%E2%9D%A4-red?style=for-the-badge)]()
 
-**Use Lovable**
+<br/>
 
-Simply visit the [Lovable Project](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and start prompting.
+**[🚀 Live Demo](#)** · **[📖 Documentation](#getting-started)** · **[🐛 Report Bug](#)** · **[✨ Request Feature](#)**
 
-Changes made via Lovable will be committed automatically to this repo.
+</div>
 
-**Use your preferred IDE**
+---
 
-If you want to work locally using your own IDE, you can clone this repo and push changes. Pushed changes will also be reflected in Lovable.
+## 📌 Why This Project
 
-The only requirement is having Node.js & npm installed - [install with nvm](https://github.com/nvm-sh/nvm#installing-and-updating)
+Most college job-portal projects are static CRUD apps — a seeded database with a search bar. **HireLens AI is different**:
 
-Follow these steps:
+> 🔴 **Live data**, not dummy seeds — jobs pulled in real time from Adzuna, Arbeitnow, and Remotive
+> 🧠 **Real AI reasoning**, not just a chatbot wrapper — semantic resume-to-JD matching, ATS scoring, interview grading
+> 📐 **Vector embeddings + cosine similarity** for recommendations — actual applied ML, not prompt-response guessing
+> 🔁 **A closed loop** — discover → check fit → improve resume → generate cover letter → practice interview → apply → get tracked
 
-```sh
-# Step 1: Clone the repository using the project's Git URL.
-git clone <YOUR_GIT_URL>
+---
 
-# Step 2: Navigate to the project directory.
-cd <YOUR_PROJECT_NAME>
+## ✨ Features
 
-# Step 3: Install the necessary dependencies.
-npm i
+<table>
+<tr>
+<td valign="top" width="50%">
 
-# Step 4: Start the development server with auto-reloading and an instant preview.
-npm run dev
-```
+### 👨‍🎓 For Students
 
-**Edit a file directly in GitHub**
+- 📄 **Resume Upload & Parsing** — Cloudinary + `pdf-parse`, multiple resumes, one primary
+- 🔍 **Live Job Feed** — Aggregated from 3 real APIs, deduplicated & normalized
+- 🎚️ **Advanced Filters** — Location, remote/hybrid/onsite, experience, salary, type, source
+- 🎯 **AI Match Analysis** — Score, missing skills, strengths, learning path
+- 🤖 **AI Recommendations** — Embedding-based, cosine-similarity ranked, "why this matches"
+- 📊 **AI Resume/ATS Analyzer** — Standalone score + improvement suggestions
+- ✉️ **AI Cover Letter Generator** — Tailored, editable, PDF export
+- 🎤 **AI Mock Interview** — JD-specific Qs, graded answers, model responses
+- 🔖 **Saved Jobs**
+- 📋 **My Applications** — Status tracking
 
-- Navigate to the desired file(s).
-- Click the "Edit" button (pencil icon) at the top right of the file view.
-- Make your changes and commit the changes.
+</td>
+<td valign="top" width="50%">
 
-**Use GitHub Codespaces**
+### 🧑‍💼 For Recruiters
 
-- Navigate to the main page of your repository.
-- Click on the "Code" button (green button) near the top right.
-- Select the "Codespaces" tab.
-- Click on "New codespace" to launch a new Codespace environment.
-- Edit files directly within the Codespace and commit and push your changes once you're done.
+- 📢 **Job Posting** — Post, edit, manage listings
+- 👥 **Applicant Tracking** — See who applied
+- 🏆 **AI Candidate Ranking** — Same embedding engine, reversed — applicants ranked by JD fit with skill-gap breakdown
 
-## What technologies are used for this project?
+### 🌐 Platform-Wide
 
-This project is built with:
+- 🔐 JWT auth + role-based access control
+- ☁️ Cloudinary for resumes & profile photos
+- 📱 Responsive, animated UI (Tailwind + shadcn/ui)
+- 🍞 Toast notifications, skeleton loaders
 
-- Vite
-- TypeScript
-- React
-- shadcn-ui
-- Tailwind CSS
+</td>
+</tr>
+</table>
 
-## How can I deploy this project?
+---
 
-Simply open [Lovable](https://lovable.dev/projects/REPLACE_WITH_PROJECT_ID) and click on Share -> Publish.
-
-## Can I connect a custom domain to my Lovable project?
-
-Yes, you can!
-
-To connect a domain, navigate to Project > Settings > Domains and click Connect Domain.
-
-Read more here: [Setting up a custom domain](https://docs.lovable.dev/features/custom-domain#custom-domain)
+## 🧠 How the AI Matching Pipeline Works

@@ -1,0 +1,1 @@
+{"version":3,"file":"ApiCall.d.ts","sourceRoot":"","sources":["../../src/models/ApiCall.ts"],"names":[],"mappings":"AAAA,OAAO,QAAQ,EAAE,EAAU,QAAQ,EAAE,MAAM,UAAU,CAAC;AAEtD,MAAM,WAAW,QAAS,SAAQ,QAAQ;IACxC,QAAQ,EAAE,MAAM,CAAC;IACjB,QAAQ,EAAE,IAAI,CAAC;CAChB;AAuBD,eAAO,MAAM,OAAO;;;;OAAqD,CAAC"}

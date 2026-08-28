@@ -3,9 +3,11 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUploadPhoto, useDeletePhoto } from "@/hooks/useProfile";
-import { BasicInfoModal, CareerPreferencesModal, SkillsModal } from "@/components/profile/ProfileEditModals";
+import { BasicInfoModal, CareerPreferencesModal, SkillsModal, EducationModal, ExperienceModal, ProjectsModal } from "@/components/profile/ProfileEditModals";
+import { ResumeUploader } from "@/components/resume/ResumeUploader";
 import { Edit2, Plus, MapPin, Phone, Mail, FileText, CheckCircle2 } from "lucide-react";
 import { Button } from "@/components/ui/button";
+import { useResumes } from "@/hooks/useResumes";
 
 const SECTIONS = [
   { id: "preference", label: "Preference" },
@@ -30,6 +32,12 @@ export default function Profile() {
   const [showBasicInfoModal, setShowBasicInfoModal] = useState(false);
   const [showPrefsModal, setShowPrefsModal] = useState(false);
   const [showSkillsModal, setShowSkillsModal] = useState(false);
+  const [showEducationModal, setShowEducationModal] = useState(false);
+  const [showExperienceModal, setShowExperienceModal] = useState(false);
+  const [showProjectsModal, setShowProjectsModal] = useState(false);
+
+  const { data: resumes } = useResumes();
+  const primaryResume = resumes?.find(r => r.is_primary) || resumes?.[0];
   
   // Calculate completion percentage
   const calculateCompletion = () => {
@@ -68,24 +76,24 @@ export default function Profile() {
   };
 
   return (
-    <div className="min-h-screen bg-[#F5F7FA]">
+    <div className="min-h-screen bg-background">
       <Navbar />
       
       <main className="pt-24 pb-16">
         <div className="container mx-auto px-4 max-w-6xl">
           
           {/* Top Profile Card */}
-          <div className="bg-white rounded-2xl p-8 shadow-sm border border-gray-100 mb-6 flex flex-col md:flex-row items-start gap-8">
+          <div className="bg-card rounded-2xl p-8 shadow-sm border border-border mb-6 flex flex-col md:flex-row items-start gap-8">
             {/* Left: Photo & Progress */}
             <div className="relative flex-shrink-0">
               <svg className="w-32 h-32 transform -rotate-90">
                 <circle
                   cx="64" cy="64" r="60"
-                  className="stroke-gray-100" strokeWidth="6" fill="none"
+                  className="stroke-muted" strokeWidth="6" fill="none"
                 />
                 <circle
                   cx="64" cy="64" r="60"
-                  className="stroke-red-500 transition-all duration-1000 ease-out"
+                  className="stroke-primary transition-all duration-1000 ease-out"
                   strokeWidth="6" fill="none"
                   strokeDasharray="377"
                   strokeDashoffset={377 - (377 * percent) / 100}
@@ -93,7 +101,7 @@ export default function Profile() {
               </svg>
               
               <label 
-                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[110px] h-[110px] bg-gray-100 rounded-full flex flex-col items-center justify-center cursor-pointer overflow-hidden group"
+                className="absolute top-1/2 left-1/2 transform -translate-x-1/2 -translate-y-1/2 w-[110px] h-[110px] bg-muted/30 rounded-full flex flex-col items-center justify-center cursor-pointer overflow-hidden group"
                 onMouseEnter={() => setIsHoveringPhoto(true)}
                 onMouseLeave={() => setIsHoveringPhoto(false)}
               >
@@ -108,7 +116,7 @@ export default function Profile() {
                         <span className="text-[10px] font-medium">Change</span>
                         <button 
                           onClick={handleRemovePhoto}
-                          className="absolute top-2 right-2 p-1 bg-red-500 rounded-full hover:bg-red-600 transition"
+                          className="absolute top-2 right-2 p-1 bg-destructive rounded-full hover:bg-destructive/90 transition"
                           title="Remove photo"
                         >
                           <Plus className="w-3 h-3 transform rotate-45" />
@@ -117,7 +125,7 @@ export default function Profile() {
                     )}
                   </>
                 ) : (
-                  <div className="flex flex-col items-center justify-center text-gray-500 group-hover:text-primary transition">
+                  <div className="flex flex-col items-center justify-center text-muted-foreground group-hover:text-primary transition">
                     {uploadPhoto.isPending ? (
                       <span className="text-xs font-medium animate-pulse">Uploading...</span>
                     ) : (
@@ -129,7 +137,7 @@ export default function Profile() {
                   </div>
                 )}
               </label>
-              <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-white px-2 text-xs font-bold text-red-500">
+              <div className="absolute -bottom-3 left-1/2 transform -translate-x-1/2 bg-background px-2 text-xs font-bold text-primary">
                 {percent}%
               </div>
             </div>
@@ -137,26 +145,26 @@ export default function Profile() {
             {/* Middle: Details */}
             <div className="flex-1">
               <div className="flex items-center gap-2 mb-1">
-                <h1 className="text-2xl font-bold text-gray-900">{user?.fullName || "Your Name"}</h1>
-                <button onClick={() => setShowBasicInfoModal(true)} className="flex items-center gap-1 text-sm font-medium text-gray-500 hover:text-primary transition">
+                <h1 className="text-2xl font-bold text-foreground">{user?.fullName || "Your Name"}</h1>
+                <button onClick={() => setShowBasicInfoModal(true)} className="flex items-center gap-1 text-sm font-medium text-muted-foreground hover:text-primary transition">
                   <Edit2 className="w-4 h-4" />
                   Edit
                 </button>
               </div>
-              <p className="text-gray-600 mb-4">{profile?.education?.[0]?.degree || "Add Education"} • {profile?.education?.[0]?.institution || ""}</p>
+              <p className="text-muted-foreground mb-4">{profile?.education?.[0]?.degree || "Add Education"} • {profile?.education?.[0]?.institution || ""}</p>
               
-              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8 text-sm text-gray-600">
+              <div className="grid grid-cols-1 md:grid-cols-2 gap-y-3 gap-x-8 text-sm text-muted-foreground">
                 <div className="flex items-center gap-2">
-                  <MapPin className="w-4 h-4 text-gray-400" />
+                  <MapPin className="w-4 h-4 text-muted-foreground/70" />
                   {profile?.location || "Add Location"}
                 </div>
                 <div className="flex items-center gap-2">
-                  <Phone className="w-4 h-4 text-gray-400" />
+                  <Phone className="w-4 h-4 text-muted-foreground/70" />
                   {profile?.phone || "Add Phone"}
                   {profile?.phone && <span className="text-primary font-medium text-xs ml-1 cursor-pointer">Verify</span>}
                 </div>
                 <div className="flex items-center gap-2 md:col-span-2">
-                  <Mail className="w-4 h-4 text-gray-400" />
+                  <Mail className="w-4 h-4 text-muted-foreground/70" />
                   {user?.email}
                   <CheckCircle2 className="w-4 h-4 text-green-500 ml-1" />
                 </div>
@@ -164,18 +172,18 @@ export default function Profile() {
             </div>
 
             {/* Right: Missing details actions */}
-            <div className="w-full md:w-64 bg-orange-50/50 rounded-xl p-5 border border-orange-100">
+            <div className="w-full md:w-64 bg-accent/20 rounded-xl p-5 border border-accent/30">
               <div className="space-y-3 mb-4">
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-gray-700"><CheckCircle2 className="w-4 h-4 text-gray-400" /> Verify mobile</div>
+                  <div className="flex items-center gap-2 text-foreground/80"><CheckCircle2 className="w-4 h-4 text-muted-foreground/70" /> Verify mobile</div>
                   <span className="text-green-600 font-medium">↑ 2%</span>
                 </div>
                 <div className="flex items-center justify-between text-sm">
-                  <div className="flex items-center gap-2 text-gray-700"><Plus className="w-4 h-4 text-gray-400" /> Add details</div>
+                  <div className="flex items-center gap-2 text-foreground/80"><Plus className="w-4 h-4 text-muted-foreground/70" /> Add details</div>
                   <span className="text-green-600 font-medium">↑ 8%</span>
                 </div>
               </div>
-              <Button className="w-full bg-[#FF6B4A] hover:bg-[#E55A39] text-white rounded-full font-medium">
+              <Button className="w-full rounded-full font-medium">
                 Add {missingDetails} missing details
               </Button>
             </div>
@@ -183,16 +191,16 @@ export default function Profile() {
 
           <div className="flex flex-col md:flex-row gap-6 items-start">
             {/* Quick Links Sidebar */}
-            <div className="w-full md:w-64 bg-white rounded-2xl shadow-sm border border-gray-100 sticky top-24 overflow-hidden">
-              <div className="p-4 border-b border-gray-100 bg-gray-50/50">
-                <h3 className="font-bold text-gray-900">Quick links</h3>
+            <div className="w-full md:w-64 bg-card rounded-2xl shadow-sm border border-border sticky top-24 overflow-hidden">
+              <div className="p-4 border-b border-border bg-muted/20">
+                <h3 className="font-bold text-foreground">Quick links</h3>
               </div>
               <nav className="py-2">
                 {SECTIONS.map(section => (
                   <a
                     key={section.id}
                     href={`#${section.id}`}
-                    className="flex items-center justify-between px-6 py-3 text-sm text-gray-600 hover:text-primary hover:bg-primary/5 transition-colors group"
+                    className="flex items-center justify-between px-6 py-3 text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors group"
                   >
                     {section.label}
                     <span className="text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">Add</span>
@@ -205,40 +213,40 @@ export default function Profile() {
             <div className="flex-1 space-y-6">
               
               {/* Career Preferences */}
-              <section id="preference" className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <section id="preference" className="bg-card rounded-2xl p-6 shadow-sm border border-border">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-900">Your career preferences</h2>
+                  <h2 className="text-lg font-bold text-foreground">Your career preferences</h2>
                   <button onClick={() => setShowPrefsModal(true)} className="text-primary text-sm font-medium hover:underline">Edit</button>
                 </div>
                 <div className="grid grid-cols-1 md:grid-cols-2 gap-6 text-sm">
                   <div>
-                    <p className="text-gray-500 mb-1">Preferred job type</p>
-                    <p className="font-medium text-gray-900">{profile?.careerPreferences?.preferredJobType || "Not specified"}</p>
+                    <p className="text-muted-foreground mb-1">Preferred job type</p>
+                    <p className="font-medium text-foreground">{profile?.careerPreferences?.preferredJobType || "Not specified"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500 mb-1">Availability to work</p>
-                    <p className="font-medium text-gray-900">{profile?.careerPreferences?.availability || "Not specified"}</p>
+                    <p className="text-muted-foreground mb-1">Availability to work</p>
+                    <p className="font-medium text-foreground">{profile?.careerPreferences?.availability || "Not specified"}</p>
                   </div>
                   <div>
-                    <p className="text-gray-500 mb-1">Preferred location</p>
-                    <p className="font-medium text-gray-900">{profile?.careerPreferences?.preferredLocation || "Not specified"}</p>
+                    <p className="text-muted-foreground mb-1">Preferred location</p>
+                    <p className="font-medium text-foreground">{profile?.careerPreferences?.preferredLocation || "Not specified"}</p>
                   </div>
                 </div>
               </section>
 
               {/* Education */}
-              <section id="education" className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <section id="education" className="bg-white rounded-2xl p-6 shadow-sm border border-border">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-900">Education</h2>
-                  <button className="text-primary text-sm font-medium hover:underline">Add</button>
+                  <h2 className="text-lg font-bold text-foreground">Education</h2>
+                  <button onClick={() => setShowEducationModal(true)} className="text-primary text-sm font-medium hover:underline">Add / Edit</button>
                 </div>
-                <div className="text-gray-600 text-sm">
+                <div className="text-muted-foreground text-sm">
                   {profile?.education?.length > 0 ? (
                     profile.education.map((edu, i) => (
                       <div key={i} className="mb-4 last:mb-0">
-                        <h4 className="font-bold text-gray-900 text-base">{edu.degree} in {edu.fieldOfStudy}</h4>
+                        <h4 className="font-bold text-foreground text-base">{edu.degree} in {edu.fieldOfStudy}</h4>
                         <p>{edu.institution}</p>
-                        <p className="text-gray-500 mt-1">{edu.startYear} - {edu.isCurrent ? "Present" : edu.endYear}</p>
+                        <p className="text-muted-foreground mt-1">{edu.startYear} - {edu.isCurrent ? "Present" : edu.endYear}</p>
                       </div>
                     ))
                   ) : (
@@ -247,36 +255,78 @@ export default function Profile() {
                 </div>
               </section>
 
-              {/* Key Skills */}
-              <section id="skills" className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              {/* Experience */}
+              <section id="experience" className="bg-white rounded-2xl p-6 shadow-sm border border-border">
                 <div className="flex items-center justify-between mb-4">
-                  <h2 className="text-lg font-bold text-gray-900">Key skills</h2>
+                  <h2 className="text-lg font-bold text-foreground">Experience</h2>
+                  <button onClick={() => setShowExperienceModal(true)} className="text-primary text-sm font-medium hover:underline">Add / Edit</button>
+                </div>
+                <div className="text-muted-foreground text-sm">
+                  {profile?.experience?.length > 0 ? (
+                    profile.experience.map((exp, i) => (
+                      <div key={i} className="mb-4 last:mb-0">
+                        <h4 className="font-bold text-foreground text-base">{exp.title}</h4>
+                        <p className="font-medium">{exp.company}</p>
+                        <p className="text-muted-foreground mt-1">{exp.startMonth} {exp.startYear} - {exp.isCurrent ? "Present" : `${exp.endMonth} ${exp.endYear}`}</p>
+                        {exp.description && <p className="mt-2 text-foreground/80">{exp.description}</p>}
+                      </div>
+                    ))
+                  ) : (
+                    <p>Highlight your professional experience to stand out to employers</p>
+                  )}
+                </div>
+              </section>
+
+              {/* Projects */}
+              <section id="projects" className="bg-white rounded-2xl p-6 shadow-sm border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-foreground">Projects</h2>
+                  <button onClick={() => setShowProjectsModal(true)} className="text-primary text-sm font-medium hover:underline">Add / Edit</button>
+                </div>
+                <div className="text-muted-foreground text-sm">
+                  {profile?.projects?.length > 0 ? (
+                    profile.projects.map((proj, i) => (
+                      <div key={i} className="mb-4 last:mb-0">
+                        <div className="flex items-center justify-between">
+                          <h4 className="font-bold text-foreground text-base">{proj.name}</h4>
+                          {proj.link && <a href={proj.link} target="_blank" rel="noopener noreferrer" className="text-primary text-xs hover:underline">View Project</a>}
+                        </div>
+                        {proj.description && <p className="mt-2 text-foreground/80">{proj.description}</p>}
+                      </div>
+                    ))
+                  ) : (
+                    <p>Showcase your hands-on work and technical abilities</p>
+                  )}
+                </div>
+              </section>
+
+              {/* Key Skills */}
+              <section id="skills" className="bg-card rounded-2xl p-6 shadow-sm border border-border">
+                <div className="flex items-center justify-between mb-4">
+                  <h2 className="text-lg font-bold text-foreground">Key skills</h2>
                   <button onClick={() => setShowSkillsModal(true)} className="text-primary text-sm font-medium hover:underline">Edit</button>
                 </div>
                 {profile?.skills?.length > 0 ? (
                   <div className="flex flex-wrap gap-2 mt-3">
                     {profile.skills.map((skill) => (
-                      <span key={skill} className="px-3 py-1.5 bg-gray-50 border border-gray-200 text-gray-700 text-sm rounded-full">
+                      <span key={skill} className="px-3 py-1.5 bg-muted border border-border text-foreground text-sm rounded-full">
                         {skill}
                       </span>
                     ))}
                   </div>
                 ) : (
-                  <p className="text-gray-600 text-sm">Tell recruiters what you know or what you are known for e.g. Direct Marketing, Oracle, Java etc.</p>
+                  <p className="text-muted-foreground text-sm">Tell recruiters what you know or what you are known for e.g. Direct Marketing, Oracle, Java etc.</p>
                 )}
               </section>
 
               {/* Resume */}
-              <section id="resume" className="bg-white rounded-2xl p-6 shadow-sm border border-gray-100">
+              <section id="resume" className="bg-white rounded-2xl p-6 shadow-sm border border-border">
                 <div className="mb-4">
-                  <h2 className="text-lg font-bold text-gray-900">Resume</h2>
-                  <p className="text-gray-600 text-sm mt-1">Your resume is the first impression you make on potential employers. Craft it carefully to secure your desired job or internship.</p>
+                  <h2 className="text-lg font-bold text-foreground">Resume</h2>
+                  <p className="text-muted-foreground text-sm mt-1">Your resume is the first impression you make on potential employers. Craft it carefully to secure your desired job or internship.</p>
                 </div>
-                <div className="border-2 border-dashed border-gray-200 rounded-xl p-8 flex flex-col items-center justify-center text-center">
-                  <Button variant="outline" className="rounded-full px-8 text-primary border-primary hover:bg-primary/5">
-                    Upload resume
-                  </Button>
-                  <p className="text-xs text-gray-500 mt-3">Supported formats: doc, docx, rtf, pdf, up to 2MB</p>
+                <div className="w-full max-w-xl">
+                  <ResumeUploader currentResume={primaryResume?.file_name} />
                 </div>
               </section>
 
@@ -302,6 +352,21 @@ export default function Profile() {
         profile={profile} 
         isOpen={showSkillsModal} 
         onClose={() => setShowSkillsModal(false)} 
+      />
+      <EducationModal 
+        profile={profile} 
+        isOpen={showEducationModal} 
+        onClose={() => setShowEducationModal(false)} 
+      />
+      <ExperienceModal 
+        profile={profile} 
+        isOpen={showExperienceModal} 
+        onClose={() => setShowExperienceModal(false)} 
+      />
+      <ProjectsModal 
+        profile={profile} 
+        isOpen={showProjectsModal} 
+        onClose={() => setShowProjectsModal(false)} 
       />
     </div>
   );

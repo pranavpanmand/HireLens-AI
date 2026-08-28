@@ -57,6 +57,11 @@ const matchAnalysisSchema = new mongoose_1.Schema({
         min: 0,
         max: 100,
     },
+    scoreBreakdown: {
+        skills: { type: Number, default: 0 },
+        experience: { type: Number, default: 0 },
+        education: { type: Number, default: 0 },
+    },
     matchedSkills: {
         type: [String],
         default: [],

@@ -9,7 +9,7 @@ import { useAnalyzeMatch } from "@/hooks/useMatchAnalysis";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useNavigate } from "react-router-dom";
-import { MatchAnalysisModal } from "@/components/analysis/MatchAnalysisModal";
+import { MatchAnalysis } from "@/components/analysis/MatchAnalysis";
 
 export default function SavedJobs() {
   const [search, setSearch] = useState("");
@@ -99,7 +99,7 @@ export default function SavedJobs() {
       <Footer />
 
       {selectedJob && (
-        <MatchAnalysisModal
+        <MatchAnalysis
           isOpen={isAnalysisModalOpen}
           onClose={() => {
             setIsAnalysisModalOpen(false);

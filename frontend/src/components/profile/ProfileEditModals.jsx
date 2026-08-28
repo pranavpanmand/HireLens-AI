@@ -212,3 +212,221 @@ export function SkillsModal({ profile, isOpen, onClose }) {
     </Dialog>
   );
 }
+
+import { useUpdateEducation, useUpdateExperience, useUpdateProjects } from "@/hooks/useProfile";
+
+export function EducationModal({ profile, isOpen, onClose }) {
+  const [education, setEducation] = useState([]);
+  const updateEducation = useUpdateEducation();
+
+  useEffect(() => {
+    if (profile?.education) {
+      setEducation(profile.education);
+    }
+  }, [profile, isOpen]);
+
+  const addEdu = () => setEducation([...education, { degree: "", fieldOfStudy: "", institution: "", startYear: "", endYear: "", isCurrent: false }]);
+  const updateEdu = (index, field, value) => {
+    const newEdu = [...education];
+    newEdu[index][field] = value;
+    setEducation(newEdu);
+  };
+  const removeEdu = (index) => setEducation(education.filter((_, i) => i !== index));
+
+  const handleSubmit = async () => {
+    try {
+      await updateEducation.mutateAsync(education);
+      onClose();
+    } catch (err) {}
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Education</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 pt-4">
+          {education.map((edu, index) => (
+            <div key={index} className="p-4 border border-border rounded-xl space-y-4 relative">
+              <button onClick={() => removeEdu(index)} className="absolute top-4 right-4 text-muted-foreground hover:text-destructive">
+                <X className="w-4 h-4" />
+              </button>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Degree</label>
+                  <Input value={edu.degree} onChange={e => updateEdu(index, "degree", e.target.value)} placeholder="e.g. B.Tech" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Field of Study</label>
+                  <Input value={edu.fieldOfStudy} onChange={e => updateEdu(index, "fieldOfStudy", e.target.value)} placeholder="e.g. Computer Science" />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <label className="text-sm font-medium">Institution</label>
+                  <Input value={edu.institution} onChange={e => updateEdu(index, "institution", e.target.value)} placeholder="e.g. MIT" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Start Year</label>
+                  <Input value={edu.startYear} onChange={e => updateEdu(index, "startYear", e.target.value)} placeholder="e.g. 2020" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">End Year</label>
+                  <Input value={edu.endYear} onChange={e => updateEdu(index, "endYear", e.target.value)} placeholder="e.g. 2024" disabled={edu.isCurrent} />
+                </div>
+              </div>
+            </div>
+          ))}
+          <Button type="button" variant="outline" onClick={addEdu} className="w-full">
+            + Add Education
+          </Button>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={updateEducation.isPending}>Save changes</Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function ExperienceModal({ profile, isOpen, onClose }) {
+  const [experience, setExperience] = useState([]);
+  const updateExperience = useUpdateExperience();
+
+  useEffect(() => {
+    if (profile?.experience) {
+      setExperience(profile.experience);
+    }
+  }, [profile, isOpen]);
+
+  const addExp = () => setExperience([...experience, { title: "", company: "", location: "", startMonth: "", startYear: "", endMonth: "", endYear: "", isCurrent: false, description: "" }]);
+  const updateExp = (index, field, value) => {
+    const newExp = [...experience];
+    newExp[index][field] = value;
+    setExperience(newExp);
+  };
+  const removeExp = (index) => setExperience(experience.filter((_, i) => i !== index));
+
+  const handleSubmit = async () => {
+    try {
+      await updateExperience.mutateAsync(experience);
+      onClose();
+    } catch (err) {}
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Experience</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 pt-4">
+          {experience.map((exp, index) => (
+            <div key={index} className="p-4 border border-border rounded-xl space-y-4 relative">
+              <button onClick={() => removeExp(index)} className="absolute top-4 right-4 text-muted-foreground hover:text-destructive">
+                <X className="w-4 h-4" />
+              </button>
+              <div className="grid grid-cols-2 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Job Title</label>
+                  <Input value={exp.title} onChange={e => updateExp(index, "title", e.target.value)} placeholder="e.g. Software Engineer" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Company</label>
+                  <Input value={exp.company} onChange={e => updateExp(index, "company", e.target.value)} placeholder="e.g. Google" />
+                </div>
+                <div className="space-y-2 col-span-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <textarea 
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={exp.description} 
+                    onChange={e => updateExp(index, "description", e.target.value)} 
+                    placeholder="Describe your role" 
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+          <Button type="button" variant="outline" onClick={addExp} className="w-full">
+            + Add Experience
+          </Button>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={updateExperience.isPending}>Save changes</Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function ProjectsModal({ profile, isOpen, onClose }) {
+  const [projects, setProjects] = useState([]);
+  const updateProjects = useUpdateProjects();
+
+  useEffect(() => {
+    if (profile?.projects) {
+      setProjects(profile.projects);
+    }
+  }, [profile, isOpen]);
+
+  const addProject = () => setProjects([...projects, { name: "", description: "", link: "", technologies: [] }]);
+  const updateProject = (index, field, value) => {
+    const newProj = [...projects];
+    newProj[index][field] = value;
+    setProjects(newProj);
+  };
+  const removeProject = (index) => setProjects(projects.filter((_, i) => i !== index));
+
+  const handleSubmit = async () => {
+    try {
+      await updateProjects.mutateAsync(projects);
+      onClose();
+    } catch (err) {}
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Edit Projects</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 pt-4">
+          {projects.map((proj, index) => (
+            <div key={index} className="p-4 border border-border rounded-xl space-y-4 relative">
+              <button onClick={() => removeProject(index)} className="absolute top-4 right-4 text-muted-foreground hover:text-destructive">
+                <X className="w-4 h-4" />
+              </button>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Project Name</label>
+                  <Input value={proj.name} onChange={e => updateProject(index, "name", e.target.value)} placeholder="e.g. E-commerce Platform" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Project Link</label>
+                  <Input value={proj.link} onChange={e => updateProject(index, "link", e.target.value)} placeholder="e.g. https://github.com/my-project" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <textarea 
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={proj.description} 
+                    onChange={e => updateProject(index, "description", e.target.value)} 
+                    placeholder="Describe your project" 
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+          <Button type="button" variant="outline" onClick={addProject} className="w-full">
+            + Add Project
+          </Button>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={updateProjects.isPending}>Save changes</Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}

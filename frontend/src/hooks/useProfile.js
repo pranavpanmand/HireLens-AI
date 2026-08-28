@@ -46,6 +46,48 @@ export const useUpdatePreferences = () => {
   });
 };
 
+export const useUpdateEducation = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: (education) => profileApi.updateEducation(education),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      toast.success("Education updated successfully");
+    },
+    onError: (error) => toast.error(error.message || "Failed to update education")
+  });
+};
+
+export const useUpdateExperience = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: (experience) => profileApi.updateExperience(experience),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      toast.success("Experience updated successfully");
+    },
+    onError: (error) => toast.error(error.message || "Failed to update experience")
+  });
+};
+
+export const useUpdateProjects = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+
+  return useMutation({
+    mutationFn: (projects) => profileApi.updateProjects(projects),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      toast.success("Projects updated successfully");
+    },
+    onError: (error) => toast.error(error.message || "Failed to update projects")
+  });
+};
+
 export const useUpdateSkills = () => {
   const queryClient = useQueryClient();
   const { user } = useAuth();

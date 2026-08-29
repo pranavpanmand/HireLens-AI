@@ -22,15 +22,8 @@ app.use((0, cors_1.default)({
         : 'http://localhost:5173',
     credentials: true,
 }));
-// Rate limiting
-const limiter = (0, express_rate_limit_1.default)({
-    windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 100, // limit each IP to 100 requests per windowMs
-    standardHeaders: true,
-    legacyHeaders: false,
-    message: { success: false, error: 'Too many requests, please try again later' },
-});
-app.use('/api/', limiter);
+const rateLimiter = require('./middleware/rateLimiter');
+app.use('/api/', rateLimiter.apiLimiter);
 // Body parsing
 app.use(express_1.default.json({ limit: '10mb' }));
 app.use(express_1.default.urlencoded({ extended: true }));

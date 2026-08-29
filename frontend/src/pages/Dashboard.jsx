@@ -9,6 +9,7 @@ import { Badge } from "@/components/ui/badge";
 import { Button } from "@/components/ui/button";
 import { useAuth } from "@/contexts/AuthContext";
 import { useResumes, usePrimaryResume, useUploadResume } from "@/hooks/useResumes";
+import { SkillGapChart } from "@/components/analytics/SkillGapChart";
 import { useSavedJobs } from "@/hooks/useJobs";
 import { useMatchAnalyses } from "@/hooks/useMatchAnalysis";
 import {
@@ -37,15 +38,6 @@ const Dashboard = () => {
   const handleResumeUpload = async (file) => {
     await uploadResume.mutateAsync(file);
   };
-
-  // Extract unique missing skills from analyses
-  const skillsToImprove = analyses ?
-  Array.from(
-    new Set(
-      analyses.flatMap((a) => a.missing_skills || [])
-    )
-  ).slice(0, 5) :
-  [];
 
   const avgMatchScore = analyses && analyses.length > 0 ?
   Math.round(analyses.reduce((acc, a) => acc + a.match_score, 0) / analyses.length) :
@@ -220,41 +212,7 @@ const Dashboard = () => {
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ delay: 0.4 }}>
                 
-                <Card>
-                  <CardHeader>
-                    <CardTitle className="flex items-center gap-2">
-                      <BookOpen className="w-5 h-5 text-primary" />
-                      Skills to Learn
-                    </CardTitle>
-                  </CardHeader>
-                  <CardContent>
-                    {skillsToImprove.length > 0 ?
-                    <div className="space-y-3">
-                        {skillsToImprove.map((skill, i) =>
-                      <div
-                        key={skill}
-                        className="flex items-center justify-between p-3 rounded-lg bg-muted/50">
-                        
-                            <span className="font-medium text-foreground">{skill}</span>
-                            <Badge variant={i < 2 ? "default" : "secondary"}>
-                              {i < 2 ? "high" : i < 4 ? "medium" : "low"}
-                            </Badge>
-                          </div>
-                      )}
-                      </div> :
-
-                    <p className="text-muted-foreground text-center py-4">
-                        Analyze jobs to see missing skills
-                      </p>
-                    }
-                    <Button variant="outline" className="w-full mt-4" asChild>
-                      <Link to="/jobs">
-                        <TrendingUp className="w-4 h-4 mr-2" />
-                        Find Jobs to Analyze
-                      </Link>
-                    </Button>
-                  </CardContent>
-                </Card>
+                <SkillGapChart />
               </motion.div>
 
               {/* Saved Jobs */}

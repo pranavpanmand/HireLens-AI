@@ -25,6 +25,7 @@ function registerRoutes(app) {
     app.use('/api/profile', profile_routes_1.default);
     app.use('/api/ai', ai_routes_1.default);
     app.use('/api/applications', applications_routes_1.default);
+    app.use('/api/analytics', require('./analytics.routes').default);
     // Health check
     app.get('/api/health', (_req, res) => {
         res.json({ success: true, data: { status: 'ok', timestamp: new Date().toISOString() } });

@@ -1,0 +1,1 @@
+const express = require('express'); const { aiLimiter } = require('./src/middleware/rateLimiter'); const app = express(); app.get('/test', aiLimiter, (req,res) => res.json({ok:true})); app.listen(5001, () => console.log('started'));

@@ -31,7 +31,7 @@ export const useChatbot = () => {
           // and only keep the last few interactions if history gets too long.
           conversationHistory: currentHistory.slice(1).map(m => ({
             role: m.role === 'assistant' ? 'model' : 'user',
-            parts: [{ text: m.content }]
+            content: m.content
           }))
         })
       });

@@ -6,7 +6,15 @@ const { fetchRemotiveJobs } = require('./remotive.service');
 const { ApiCall } = require('../models/ApiCall');
 const { JobPosting } = require('../models/JobPosting');
 
+const NodeCache = require('node-cache');
+const jobCache = new NodeCache({ stdTTL: 1800 }); // 30 minutes
+
 async function aggregateJobs({ search = '', location = '', source = '', page = 1, limit = 10 }) {
+    const cacheKey = `${search}-${location}-${source}-${page}-${limit}`;
+    if (jobCache.has(cacheKey)) {
+        return; // Already fetched and upserted recently
+    }
+
     const providers = [];
     
     // Add providers based on source filter
@@ -82,6 +90,7 @@ async function aggregateJobs({ search = '', location = '', source = '', page = 1
 
     // We do NOT return the in-memory deduplicated list directly anymore!
     // We return nothing, because jobs.controller will now fetch from DB using proper skip/limit pagination.
+    jobCache.set(cacheKey, true);
 }
 
 module.exports = { aggregateJobs };

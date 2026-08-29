@@ -36,7 +36,11 @@ const getMatchForJob = async (req, res, next) => {
             resumeId: primaryResume._id,
             jobId,
         }).lean();
-        res.json({ success: true, data: match });
+        if (match) {
+            res.json({ success: true, data: { ...match, resumeText: primaryResume.parsedText } });
+        } else {
+            res.json({ success: true, data: null });
+        }
     }
     catch (error) {
         next(error);
@@ -64,7 +68,7 @@ const generateMatch = async (req, res, next) => {
             jobId: job._id,
         });
         if (existing) {
-            res.json({ success: true, data: existing, message: 'Returned cached match analysis' });
+            res.json({ success: true, data: { ...existing, resumeText: resume.parsedText }, message: 'Returned cached match analysis' });
             return;
         }
         // Call Gemini
@@ -75,12 +79,13 @@ const generateMatch = async (req, res, next) => {
             resumeId: resume._id,
             jobId: job._id,
             matchScore: result.matchScore,
+            scoreBreakdown: result.scoreBreakdown,
             matchedSkills: result.matchedSkills || [],
             missingSkills: result.missingSkills || [],
             learningPath: result.learningPath || [],
             summary: result.summary,
         });
-        res.status(201).json({ success: true, data: newMatch });
+        res.status(201).json({ success: true, data: { ...newMatch.toObject(), resumeText: resume.parsedText } });
     }
     catch (error) {
         if (error.code === 11000) {
@@ -89,7 +94,8 @@ const generateMatch = async (req, res, next) => {
                 userId: req.user.id,
                 jobId: req.params.jobId,
             });
-            res.json({ success: true, data: existing });
+            const resume = await Resume_1.Resume.findOne({ userId: req.user.id, isPrimary: true }).lean();
+            res.json({ success: true, data: { ...existing?.toObject(), resumeText: resume?.parsedText } });
             return;
         }
         next(error);

@@ -17,6 +17,11 @@ export async function fetchApi(endpoint, options = {}) {
 
   const headers = new Headers(options.headers || {});
 
+  const token = localStorage.getItem('token');
+  if (token) {
+    headers.set('Authorization', `Bearer ${token}`);
+  }
+
   // Only add content-type json if it's not FormData (which multer needs boundary for)
   if (!(options.body instanceof FormData)) {
     headers.set('Content-Type', 'application/json');

@@ -233,7 +233,12 @@ async function analyzeMatch(resumeText, jobDescription) {
     
     Return a JSON object with this exact structure:
     {
-      "matchScore": number (0-100),
+      "matchScore": number (0-100, overall match percentage),
+      "scoreBreakdown": {
+        "skills": number (0-100),
+        "experience": number (0-100),
+        "education": number (0-100)
+      },
       "matchedSkills": string[],
       "missingSkills": string[],
       "summary": string (2-3 sentences explaining the score),
@@ -258,6 +263,7 @@ async function analyzeMatch(resumeText, jobDescription) {
     const parsed = cleanJSON(result.response.text());
     return {
         matchScore: parsed.matchScore !== undefined ? parsed.matchScore : (parsed.match_score || 0),
+        scoreBreakdown: parsed.scoreBreakdown || { skills: 0, experience: 0, education: 0 },
         matchedSkills: parsed.matchedSkills || parsed.matched_skills || [],
         missingSkills: parsed.missingSkills || parsed.missing_skills || [],
         learningPath: parsed.learningPath || parsed.learning_path || [],

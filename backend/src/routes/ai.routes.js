@@ -14,6 +14,15 @@ router.post('/resume/analyze', rateLimiter_1.aiLimiter, ai_controller_1.analyzeR
 // Cover Letter
 router.post('/cover-letter', rateLimiter_1.aiLimiter, ai_controller_1.generateCoverLetterHandler);
 
+// LinkedIn Optimizer
+router.post('/linkedin-optimize', rateLimiter_1.aiLimiter, ai_controller_1.generateLinkedInProfileHandler);
+
+// Networking Message Generator
+router.post('/networking-message', rateLimiter_1.aiLimiter, ai_controller_1.generateNetworkingMessageHandler);
+
+// STAR Story Generator
+router.post('/star-stories', rateLimiter_1.aiLimiter, ai_controller_1.generateStarStoriesHandler);
+
 // Mock Interview
 router.post('/mock-interview/start', ai_controller_1.startMockInterview);
 router.post('/mock-interview/:sessionId/answer', ai_controller_1.submitAnswer);

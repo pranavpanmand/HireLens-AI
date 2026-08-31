@@ -7,6 +7,9 @@ exports.evaluateAnswer = evaluateAnswer;
 exports.chatWithAI = chatWithAI;
 exports.analyzeMatch = analyzeMatch;
 exports.generateMatchReason = generateMatchReason;
+exports.generateLinkedInOptimization = generateLinkedInOptimization;
+exports.generateNetworkingMessage = generateNetworkingMessage;
+exports.generateStarStories = generateStarStories;
 const generative_ai_1 = require("@google/generative-ai");
 const env_1 = require("../config/env");
 
@@ -389,6 +392,127 @@ async function extractProfileFromResume(resumeText) {
         console.error("Profile extraction failed:", e.message);
         return { education: [], experience: [], projects: [], skills: [], languages: [] };
     }
+}
+
+/**
+ * Generate optimized LinkedIn profile content based on a resume.
+ */
+async function generateLinkedInOptimization(resumeText) {
+    const model = getModel();
+    const prompt = `
+    You are an expert LinkedIn Profile Optimizer and Executive Career Coach.
+    Analyze this resume and generate a highly optimized, keyword-rich LinkedIn profile (Headline, About Section, and Experience items) designed to attract top recruiters.
+
+    Resume:
+    ${resumeText.substring(0, 15000)}
+
+    Return a JSON object exactly matching this structure:
+    {
+      "headline": string (Professional, compelling headline. Max 220 chars. Format: Role | Expertise | Value Prop),
+      "aboutSummary": string (Engaging first-person narrative summary, 3-4 paragraphs highlighting career story, top skills, and impact),
+      "experiences": [
+        {
+          "title": string (Job title),
+          "company": string (Company name),
+          "optimizedBullets": string[] (3-5 highly impactful, quantifiable bullet points for this specific role)
+        }
+      ]
+    }
+
+    Rules:
+    - Write the About section in the first person ("I am a...").
+    - Make the bullets quantifiable and action-oriented (using the XYZ formula: Accomplished [X] as measured by [Y], by doing [Z]).
+    - Extract only the top 3-4 most relevant experiences to optimize.
+    `;
+
+    const result = await callWithRetry(() => model.generateContent(prompt));
+    return cleanJSON(result.response.text());
+}
+
+/**
+ * Generate a networking message (LinkedIn, Cold Email, or Follow-up).
+ */
+async function generateNetworkingMessage(resumeText, targetRole, targetCompany, recipientName, messageType) {
+    const model = getModel();
+    let specificRules = "";
+
+    if (messageType === "linkedin") {
+        specificRules = "- MUST be strictly under 300 characters.\n- Highly engaging and concise connection request format.";
+    } else if (messageType === "email") {
+        specificRules = "- Professional cold email format (150-250 words).\n- Include a compelling subject line.\n- Focus on the value the candidate brings to the company.";
+    } else if (messageType === "followup") {
+        specificRules = "- Polite, brief follow-up after an application (under 100 words).\n- Restate strong interest and one key differentiator.";
+    } else {
+        specificRules = "- Professional tone and relevant to the role.";
+    }
+
+    const prompt = `
+    You are an expert Career Coach and Recruiter.
+    Generate a personalized networking message for a candidate reaching out to a recruiter/hiring manager.
+
+    Target Role: ${targetRole}
+    Target Company: ${targetCompany}
+    Recipient Name: ${recipientName || "Hiring Manager"}
+    Message Type: ${messageType}
+
+    Candidate Resume:
+    ${resumeText.substring(0, 10000)}
+
+    Rules:
+    ${specificRules}
+    - Do not use placeholders like [Your Name], extract the candidate's name from the resume or leave it blank for them to fill.
+    - Highlight 1-2 highly relevant skills from the resume that fit the target role.
+
+    Return a JSON object exactly matching this structure:
+    {
+      "subject": string (Subject line, leave empty string if it's a LinkedIn connection request),
+      "message": string (The actual generated message),
+      "tips": string (A 1-sentence tip on when or how to send this message)
+    }
+    `;
+
+    const result = await callWithRetry(() => model.generateContent(prompt));
+    return cleanJSON(result.response.text());
+}
+
+/**
+ * Generate Behavioral STAR Stories from a resume.
+ */
+async function generateStarStories(resumeText, targetRole) {
+    const model = getModel();
+    const prompt = `
+    You are an expert Career Coach and Behavioral Interview Specialist.
+    Analyze the following resume and extract the candidate's 3 to 4 most impressive, impactful achievements.
+    Format each achievement into a comprehensive STAR (Situation, Task, Action, Result) story.
+
+    Candidate Resume:
+    ${resumeText.substring(0, 15000)}
+    ${targetRole ? `\nTarget Role Context: Make sure the stories highlight skills relevant for a ${targetRole}.` : ''}
+
+    Rules:
+    - Write in the first person ("I").
+    - Make the "Action" section the longest and most detailed (what the candidate actually did).
+    - Ensure the "Result" section is quantifiable whenever possible.
+    - Give each story a catchy title.
+    - Predict what common behavioral interview question this story perfectly answers (e.g., "Tell me about a time you handled a tight deadline...").
+
+    Return a JSON object exactly matching this structure:
+    {
+      "stories": [
+        {
+          "title": string (Catchy title for the story, max 50 chars),
+          "questionAnswered": string (The behavioral question this best answers),
+          "situation": string (1-2 sentences setting the scene),
+          "task": string (1-2 sentences describing the goal/challenge),
+          "action": string (3-4 sentences detailing the specific steps taken),
+          "result": string (1-2 sentences with quantifiable outcomes)
+        }
+      ]
+    }
+    `;
+
+    const result = await callWithRetry(() => model.generateContent(prompt));
+    return cleanJSON(result.response.text());
 }
 
 exports.extractProfileFromResume = extractProfileFromResume;

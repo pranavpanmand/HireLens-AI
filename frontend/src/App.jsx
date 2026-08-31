@@ -13,6 +13,9 @@ import Profile from "./pages/Profile";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
 import CoverLetterGenerator from "./pages/CoverLetterGenerator";
 import MockInterviewPage from "./pages/MockInterviewPage";
+import LinkedInOptimizer from "./pages/LinkedInOptimizer";
+import NetworkingGenerator from "./pages/NetworkingGenerator";
+import StarStories from "./pages/StarStories";
 import SavedJobs from "./pages/SavedJobs";
 import MyApplications from "./pages/MyApplications";
 import JobApplicants from "./pages/recruiter/JobApplicants";
@@ -76,6 +79,30 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute requiredRole="student">
               <PageTransition><MockInterviewPage /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/linkedin-optimizer"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <PageTransition><LinkedInOptimizer /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/networking"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <PageTransition><NetworkingGenerator /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/star-stories"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <PageTransition><StarStories /></PageTransition>
             </ProtectedRoute>
           }
         />

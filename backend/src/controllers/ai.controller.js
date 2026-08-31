@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.chat = exports.getMockHistory = exports.submitAnswer = exports.startMockInterview = exports.generateCoverLetterHandler = exports.analyzeResumeHandler = exports.getSkillGaps = void 0;
+exports.chat = exports.getMockHistory = exports.submitAnswer = exports.startMockInterview = exports.generateCoverLetterHandler = exports.analyzeResumeHandler = exports.getSkillGaps = exports.generateLinkedInProfileHandler = exports.generateNetworkingMessageHandler = exports.generateStarStoriesHandler = void 0;
 const Resume_1 = require("../models/Resume");
 const JobPosting_1 = require("../models/JobPosting");
 const MatchAnalysis_1 = require("../models/MatchAnalysis");
@@ -101,6 +101,95 @@ const generateCoverLetterHandler = async (req, res, next) => {
     }
 };
 exports.generateCoverLetterHandler = generateCoverLetterHandler;
+
+// ========================= LINKEDIN OPTIMIZER =========================
+const generateLinkedInProfileHandler = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const { resumeId } = req.body;
+
+        let resume;
+        if (resumeId) {
+            resume = await Resume_1.Resume.findOne({ _id: resumeId, userId });
+        } else {
+            resume = await Resume_1.Resume.findOne({ userId, isPrimary: true });
+            if (!resume) resume = await Resume_1.Resume.findOne({ userId });
+        }
+
+        if (!resume || !resume.parsedText || resume.parsedText.trim().length < 50) {
+            throw new errorHandler_1.AppError('No valid resume found. Please upload a resume first to optimize your LinkedIn.', 404);
+        }
+
+        const optimizedProfile = await (0, ai_service_1.generateLinkedInOptimization)(resume.parsedText);
+        res.json({ success: true, data: optimizedProfile });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.generateLinkedInProfileHandler = generateLinkedInProfileHandler;
+
+// ========================= NETWORKING MESSAGE GENERATOR =========================
+const generateNetworkingMessageHandler = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const { resumeId, targetRole, targetCompany, recipientName, messageType } = req.body;
+
+        if (!targetRole || !targetCompany || !messageType) {
+            throw new errorHandler_1.AppError('Target role, company, and message type are required', 400);
+        }
+
+        let resume;
+        if (resumeId) {
+            resume = await Resume_1.Resume.findOne({ _id: resumeId, userId });
+        } else {
+            resume = await Resume_1.Resume.findOne({ userId, isPrimary: true });
+            if (!resume) resume = await Resume_1.Resume.findOne({ userId });
+        }
+
+        if (!resume || !resume.parsedText || resume.parsedText.trim().length < 50) {
+            throw new errorHandler_1.AppError('No valid resume found. Please upload a resume first.', 404);
+        }
+
+        const messageData = await (0, ai_service_1.generateNetworkingMessage)(
+            resume.parsedText,
+            targetRole,
+            targetCompany,
+            recipientName,
+            messageType
+        );
+        
+        res.json({ success: true, data: messageData });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.generateNetworkingMessageHandler = generateNetworkingMessageHandler;
+
+// ========================= STAR STORY GENERATOR =========================
+const generateStarStoriesHandler = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const { resumeId, targetRole } = req.body;
+
+        let resume;
+        if (resumeId) {
+            resume = await Resume_1.Resume.findOne({ _id: resumeId, userId });
+        } else {
+            resume = await Resume_1.Resume.findOne({ userId, isPrimary: true });
+            if (!resume) resume = await Resume_1.Resume.findOne({ userId });
+        }
+
+        if (!resume || !resume.parsedText || resume.parsedText.trim().length < 50) {
+            throw new errorHandler_1.AppError('No valid resume found. Please upload a resume first.', 404);
+        }
+
+        const starStories = await (0, ai_service_1.generateStarStories)(resume.parsedText, targetRole);
+        res.json({ success: true, data: starStories });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.generateStarStoriesHandler = generateStarStoriesHandler;
 
 // ========================= MOCK INTERVIEW =========================
 const startMockInterview = async (req, res, next) => {

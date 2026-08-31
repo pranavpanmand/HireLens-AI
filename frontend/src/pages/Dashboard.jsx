@@ -21,7 +21,13 @@ import {
   Sparkles,
   Target,
   BookOpen,
-  LogOut } from
+  LogOut,
+  FileSearch,
+  PenTool,
+  Mic,
+  Linkedin,
+  Mail,
+  Star } from
 "lucide-react";
 import { Link } from "react-router-dom";
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
@@ -98,6 +104,43 @@ const Dashboard = () => {
               </motion.div>
             )}
           </div>
+
+          {/* AI Career Hub */}
+          <Reveal delay={0.2}>
+            <div className="mb-8">
+              <h2 className="text-2xl font-bold font-display text-foreground flex items-center gap-2 mb-6">
+                <Sparkles className="w-6 h-6 text-primary" />
+                AI Career Hub
+              </h2>
+              <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-4">
+                {[
+                  { title: "Resume Analyzer", desc: "Score & optimize your resume for ATS", icon: FileSearch, color: "text-blue-500", bg: "bg-blue-500/10", link: "/resume-analyzer" },
+                  { title: "Cover Letter Generator", desc: "Instantly draft tailored cover letters", icon: PenTool, color: "text-emerald-500", bg: "bg-emerald-500/10", link: "/cover-letter" },
+                  { title: "Mock Interview", desc: "Practice with an AI voice interviewer", icon: Mic, color: "text-purple-500", bg: "bg-purple-500/10", link: "/mock-interview" },
+                  { title: "LinkedIn Optimizer", desc: "Generate a recruiter-ready profile", icon: Linkedin, color: "text-[#0A66C2]", bg: "bg-[#0A66C2]/10", link: "/linkedin-optimizer" },
+                  { title: "Networking Outreach", desc: "Draft cold emails & connection requests", icon: Mail, color: "text-amber-500", bg: "bg-amber-500/10", link: "/networking" },
+                  { title: "STAR Story Generator", desc: "Pre-write behavioral interview stories", icon: Star, color: "text-rose-500", bg: "bg-rose-500/10", link: "/star-stories" }
+                ].map((tool, i) => (
+                  <Link key={i} to={tool.link}>
+                    <motion.div
+                      whileHover={{ y: -4, scale: 1.01 }}
+                      className="group p-5 rounded-2xl border border-border bg-card shadow-sm hover:shadow-card hover:border-primary/50 transition-all h-full flex flex-col"
+                    >
+                      <div className="flex items-center gap-4 mb-3">
+                        <div className={`w-12 h-12 rounded-xl flex items-center justify-center shrink-0 ${tool.bg} group-hover:scale-110 transition-transform`}>
+                          <tool.icon className={`w-6 h-6 ${tool.color}`} />
+                        </div>
+                        <div>
+                          <h3 className="font-bold text-lg text-foreground group-hover:text-primary transition-colors">{tool.title}</h3>
+                        </div>
+                      </div>
+                      <p className="text-sm text-muted-foreground mt-auto">{tool.desc}</p>
+                    </motion.div>
+                  </Link>
+                ))}
+              </div>
+            </div>
+          </Reveal>
 
           <div className="grid grid-cols-1 lg:grid-cols-3 gap-6">
             {/* Left Column */}

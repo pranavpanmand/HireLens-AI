@@ -42,7 +42,7 @@ const Dashboard = () => {
   const { data: primaryResume } = usePrimaryResume();
   const { data: savedJobs, isLoading: savedJobsLoading } = useSavedJobs();
   const { data: analyses, isLoading: analysesLoading } = useMatchAnalyses();
-  const uploadResume = useUploadResume();
+
 
   const avgMatchScore = analyses && analyses.length > 0 ?
   Math.round(analyses.reduce((acc, a) => acc + a.match_score, 0) / analyses.length) :

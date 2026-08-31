@@ -1,7 +1,7 @@
-import { env } from './src/config/env';
-import { AdzunaService } from './src/services/adzuna.service';
-import { AiService } from './src/services/ai.service';
-import axios from 'axios';
+const { env } = require('./src/config/env');
+const { AdzunaService } = require('./src/services/adzuna.service');
+const { AiService } = require('./src/services/ai.service');
+const axios = require('axios');
 
 async function runTests() {
   console.log('--- TESTING APIS ---');
@@ -14,7 +14,7 @@ async function runTests() {
     const adzunaUrl = `https://api.adzuna.com/v1/api/jobs/us/search/1?app_id=${env.ADZUNA_APP_ID}&app_key=${env.ADZUNA_APP_KEY}&results_per_page=1&what=react`;
     const response = await axios.get(adzunaUrl);
     console.log(`Adzuna Success! Found ${response.data.count} jobs. First job title: ${response.data.results[0]?.title}`);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Adzuna API Error:', error.response?.data || error.message);
   }
 
@@ -23,7 +23,7 @@ async function runTests() {
     const prompt = 'Return exactly "API_KEY_VALID" if you can read this.';
     const result = await AiService.generateJson(prompt, {});
     console.log('Gemini Success! Response:', result);
-  } catch (error: any) {
+  } catch (error) {
     console.error('Gemini API Error:', error.message);
   }
 

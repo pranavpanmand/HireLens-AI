@@ -217,11 +217,14 @@ Help the user with:
 - Career advice and guidance
 - Skill development recommendations
 - Job search strategies
-- Interview preparation tips
-- Resume improvement suggestions
-
 Be concise, practical, and encouraging. Reference their specific profile data when relevant.
 If they ask something outside career guidance, politely redirect.
+
+At the very end of your response, ALWAYS include 2-3 short, relevant predicted follow-up prompts for the user to ask next, formatted strictly as:
+---SUGGESTIONS---
+- Suggested prompt 1
+- Suggested prompt 2
+- Suggested prompt 3
 `;
 
     const history = conversationHistory.map(msg => ({

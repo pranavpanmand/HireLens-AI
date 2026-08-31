@@ -43,12 +43,15 @@ export const Navbar = () => {
   }, []);
 
   const navLinks = [
-  { href: "/jobs", label: "Find Jobs" },
-  ...(user && hasRole("student") ? [
-    { href: "/resume-analyzer", label: "Resume Analyzer" },
-    { href: "/saved-jobs", label: "Saved Jobs" }
-  ] : []),
-  ...(user && hasRole("recruiter") ? [{ href: "/recruiter", label: "Recruiter Dashboard" }] : [])];
+    { href: "/jobs", label: "Find Jobs" },
+    ...(user && hasRole("student") ? [
+      { href: "/resume-analyzer", label: "Resume Analyzer" },
+      { href: "/cover-letter", label: "Cover Letter" },
+      { href: "/mock-interview", label: "Mock Interview" },
+      { href: "/saved-jobs", label: "Saved Jobs" }
+    ] : []),
+    ...(user && hasRole("recruiter") ? [{ href: "/recruiter", label: "Recruiter Dashboard" }] : [])
+  ];
 
   const isActive = (path) => location.pathname === path;
 

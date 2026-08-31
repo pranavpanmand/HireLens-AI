@@ -11,6 +11,8 @@ import JobDetails from "./pages/JobDetails";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
+import CoverLetterGenerator from "./pages/CoverLetterGenerator";
+import MockInterviewPage from "./pages/MockInterviewPage";
 import SavedJobs from "./pages/SavedJobs";
 import MyApplications from "./pages/MyApplications";
 import JobApplicants from "./pages/recruiter/JobApplicants";
@@ -58,6 +60,22 @@ const AnimatedRoutes = () => {
           element={
             <ProtectedRoute requiredRole="student">
               <PageTransition><ResumeAnalyzer /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/cover-letter"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <PageTransition><CoverLetterGenerator /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/mock-interview"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <PageTransition><MockInterviewPage /></PageTransition>
             </ProtectedRoute>
           }
         />

@@ -1,10 +1,9 @@
-import { useState } from "react";
+import { useState, useEffect, useRef } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { X, Mic, Send, Loader2, CheckCircle2, AlertTriangle, MessageSquare, Play, PlayCircle } from "lucide-react";
+import { X, Mic, MicOff, Volume2, VolumeX, Send, Loader2, CheckCircle2, AlertTriangle, MessageSquare, Play, PlayCircle, Lightbulb as LightbulbIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStartMockInterview, useSubmitAnswer } from "@/hooks/useMockInterview";
 import { toast } from "sonner";
-import { CircularProgress } from "@/components/ui/CircularProgress";
 
 export function MockInterviewModal({ job, onClose }) {
   const [session, setSession] = useState(null);
@@ -13,13 +12,82 @@ export function MockInterviewModal({ job, onClose }) {
   const [feedback, setFeedback] = useState(null);
   const [isFinished, setIsFinished] = useState(false);
 
+  const [isListening, setIsListening] = useState(false);
+  const [isSpeaking, setIsSpeaking] = useState(false);
+  const [autoSpeak, setAutoSpeak] = useState(true);
+
   const startInterview = useStartMockInterview();
   const submitAnswer = useSubmitAnswer();
+  const recognitionRef = useRef(null);
+
+  useEffect(() => {
+    if ('webkitSpeechRecognition' in window || 'SpeechRecognition' in window) {
+      const SpeechRecognition = window.SpeechRecognition || window.webkitSpeechRecognition;
+      recognitionRef.current = new SpeechRecognition();
+      recognitionRef.current.continuous = true;
+      recognitionRef.current.interimResults = true;
+
+      recognitionRef.current.onresult = (event) => {
+        let transcript = '';
+        for (let i = event.resultIndex; i < event.results.length; i++) {
+          transcript += event.results[i][0].transcript;
+        }
+        setAnswer(prev => prev ? `${prev} ${transcript}` : transcript);
+      };
+
+      recognitionRef.current.onerror = (event) => {
+        console.error('Speech recognition error', event.error);
+        setIsListening(false);
+      };
+
+      recognitionRef.current.onend = () => {
+        setIsListening(false);
+      };
+    }
+  }, []);
+
+  const speakQuestion = (text) => {
+    if (!('speechSynthesis' in window)) return;
+    window.speechSynthesis.cancel();
+    const utterance = new SpeechSynthesisUtterance(text);
+    utterance.rate = 0.95;
+    utterance.pitch = 1;
+    utterance.onstart = () => setIsSpeaking(true);
+    utterance.onend = () => setIsSpeaking(false);
+    utterance.onerror = () => setIsSpeaking(false);
+    window.speechSynthesis.speak(utterance);
+  };
+
+  const stopSpeaking = () => {
+    if ('speechSynthesis' in window) {
+      window.speechSynthesis.cancel();
+      setIsSpeaking(false);
+    }
+  };
+
+  const toggleMic = () => {
+    if (!recognitionRef.current) {
+      toast.error("Speech recognition is not supported in your browser.");
+      return;
+    }
+
+    if (isListening) {
+      recognitionRef.current.stop();
+      setIsListening(false);
+    } else {
+      recognitionRef.current.start();
+      setIsListening(true);
+      toast.info("Listening... Speak your answer now.");
+    }
+  };
 
   const handleStart = async () => {
     try {
-      const data = await startInterview.mutateAsync(job.id);
+      const data = await startInterview.mutateAsync(job);
       setSession(data);
+      if (autoSpeak && data?.questions?.[0]?.question) {
+        speakQuestion(data.questions[0].question);
+      }
     } catch (err) {
       toast.error(err.message || "Failed to start interview");
     }
@@ -29,6 +97,10 @@ export function MockInterviewModal({ job, onClose }) {
     if (!answer.trim()) {
       toast.error("Please provide an answer");
       return;
+    }
+    stopSpeaking();
+    if (isListening && recognitionRef.current) {
+      recognitionRef.current.stop();
     }
     
     try {
@@ -45,11 +117,16 @@ export function MockInterviewModal({ job, onClose }) {
 
   const handleNext = () => {
     if (currentQuestionIndex < session.questions.length - 1) {
-      setCurrentQuestionIndex(prev => prev + 1);
+      const nextIndex = currentQuestionIndex + 1;
+      setCurrentQuestionIndex(nextIndex);
       setAnswer("");
       setFeedback(null);
+      if (autoSpeak && session?.questions?.[nextIndex]?.question) {
+        speakQuestion(session.questions[nextIndex].question);
+      }
     } else {
       setIsFinished(true);
+      stopSpeaking();
     }
   };
 
@@ -66,16 +143,32 @@ export function MockInterviewModal({ job, onClose }) {
           <div>
             <h2 className="text-xl font-bold flex items-center gap-2">
               <MessageSquare className="w-5 h-5 text-primary" />
-              AI Mock Interview
+              AI Recruiter Mock Interview
             </h2>
             <p className="text-sm text-muted-foreground mt-1">for {job.title} at {job.company}</p>
           </div>
-          <button 
-            onClick={onClose}
-            className="p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors"
-          >
-            <X className="w-5 h-5" />
-          </button>
+          <div className="flex items-center gap-2">
+            {session && (
+              <Button
+                variant="ghost"
+                size="sm"
+                onClick={() => {
+                  setAutoSpeak(!autoSpeak);
+                  if (autoSpeak) stopSpeaking();
+                }}
+                className="text-xs flex items-center gap-1.5"
+              >
+                {autoSpeak ? <Volume2 className="w-4 h-4 text-primary" /> : <VolumeX className="w-4 h-4 text-muted-foreground" />}
+                {autoSpeak ? "Voice On" : "Voice Off"}
+              </Button>
+            )}
+            <button 
+              onClick={() => { stopSpeaking(); onClose(); }}
+              className="p-2 rounded-full hover:bg-muted text-muted-foreground transition-colors"
+            >
+              <X className="w-5 h-5" />
+            </button>
+          </div>
         </div>
 
         {/* Content */}
@@ -85,12 +178,12 @@ export function MockInterviewModal({ job, onClose }) {
               <div className="w-20 h-20 bg-primary/10 rounded-full flex items-center justify-center mb-6">
                 <PlayCircle className="w-10 h-10 text-primary" />
               </div>
-              <h3 className="text-2xl font-bold mb-4">Ready for your interview?</h3>
+              <h3 className="text-2xl font-bold mb-4">Ready for your AI Recruiter Call?</h3>
               <p className="text-muted-foreground max-w-md mb-8">
-                Our AI will ask you technical and behavioral questions tailored to this job description. You'll get instant, detailed feedback on every answer to help you improve.
+                Our AI Recruiter will ask you tailored technical & behavioral questions. You can speak your answers via voice or type them, receiving real-time evaluation & scoring!
               </p>
-              <Button size="lg" onClick={handleStart} className="px-8 h-12 text-lg">
-                Start Interview Now
+              <Button size="lg" onClick={handleStart} className="px-8 h-12 text-lg bg-gradient-primary">
+                Start AI Interview Call
               </Button>
             </div>
           )}
@@ -98,8 +191,8 @@ export function MockInterviewModal({ job, onClose }) {
           {startInterview.isPending && (
             <div className="flex flex-col items-center justify-center h-full py-12">
               <Loader2 className="w-12 h-12 animate-spin text-primary mb-4" />
-              <h3 className="text-xl font-semibold">Preparing Your Interview...</h3>
-              <p className="text-muted-foreground mt-2">Analyzing the job description and generating tailored questions.</p>
+              <h3 className="text-xl font-semibold">AI Recruiter is Setting Up Your Questions...</h3>
+              <p className="text-muted-foreground mt-2">Analyzing position requirements and tailoring questions.</p>
             </div>
           )}
 
@@ -123,12 +216,27 @@ export function MockInterviewModal({ job, onClose }) {
               </div>
 
               {/* Question */}
-              <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-6">
-                <h3 className="text-2xl font-semibold text-foreground mb-4 leading-relaxed">
-                  "{session.questions[currentQuestionIndex].question}"
-                </h3>
+              <div className="bg-primary/5 border border-primary/20 rounded-xl p-6 mb-6 relative">
+                <div className="flex justify-between items-start gap-4">
+                  <h3 className="text-2xl font-semibold text-foreground leading-relaxed flex-1">
+                    "{session.questions[currentQuestionIndex].question}"
+                  </h3>
+                  <Button
+                    variant="outline"
+                    size="sm"
+                    onClick={() => {
+                      if (isSpeaking) stopSpeaking();
+                      else speakQuestion(session.questions[currentQuestionIndex].question);
+                    }}
+                    className="shrink-0"
+                  >
+                    {isSpeaking ? <VolumeX className="w-4 h-4 text-destructive mr-1" /> : <Volume2 className="w-4 h-4 text-primary mr-1" />}
+                    {isSpeaking ? "Stop Voice" : "Hear Recruiter"}
+                  </Button>
+                </div>
+
                 {session.questions[currentQuestionIndex].tips && (
-                  <div className="flex items-start gap-2 text-sm text-muted-foreground bg-background/50 p-3 rounded-lg">
+                  <div className="flex items-start gap-2 text-sm text-muted-foreground bg-background/50 p-3 rounded-lg mt-4">
                     <LightbulbIcon className="w-4 h-4 text-amber-500 mt-0.5 flex-shrink-0" />
                     <p>{session.questions[currentQuestionIndex].tips}</p>
                   </div>
@@ -138,20 +246,36 @@ export function MockInterviewModal({ job, onClose }) {
               {/* Answer Area */}
               {!feedback ? (
                 <div className="space-y-4">
-                  <textarea
-                    value={answer}
-                    onChange={(e) => setAnswer(e.target.value)}
-                    placeholder="Type your answer here... (Speak clearly and use the STAR method for behavioral questions)"
-                    className="w-full h-48 p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/50 resize-none"
-                  />
-                  <div className="flex justify-end gap-3">
+                  <div className="relative">
+                    <textarea
+                      value={answer}
+                      onChange={(e) => setAnswer(e.target.value)}
+                      placeholder="Speak your answer using the mic button below, or type here..."
+                      className="w-full h-48 p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/50 resize-none pr-12 text-base"
+                    />
+                    <Button
+                      type="button"
+                      variant={isListening ? "destructive" : "secondary"}
+                      size="icon"
+                      onClick={toggleMic}
+                      className={`absolute right-3 bottom-3 rounded-full transition-all ${isListening ? "animate-pulse" : ""}`}
+                      title={isListening ? "Stop Microphone" : "Speak Answer via Microphone"}
+                    >
+                      {isListening ? <MicOff className="w-5 h-5" /> : <Mic className="w-5 h-5 text-primary" />}
+                    </Button>
+                  </div>
+
+                  <div className="flex items-center justify-between">
+                    <span className="text-xs text-muted-foreground">
+                      {isListening ? "🔴 Voice active: Listening to your microphone..." : "💡 Tip: Use the STAR method (Situation, Task, Action, Result)"}
+                    </span>
                     <Button 
                       onClick={handleSubmit} 
                       disabled={submitAnswer.isPending || !answer.trim()}
-                      className="px-6"
+                      className="px-6 bg-gradient-primary"
                     >
                       {submitAnswer.isPending ? <Loader2 className="w-4 h-4 mr-2 animate-spin" /> : <Send className="w-4 h-4 mr-2" />}
-                      Submit Answer
+                      Submit Answer to Recruiter
                     </Button>
                   </div>
                 </div>
@@ -237,23 +361,3 @@ export function MockInterviewModal({ job, onClose }) {
   );
 }
 
-function LightbulbIcon(props) {
-  return (
-    <svg
-      {...props}
-      xmlns="http://www.w3.org/2000/svg"
-      width="24"
-      height="24"
-      viewBox="0 0 24 24"
-      fill="none"
-      stroke="currentColor"
-      strokeWidth="2"
-      strokeLinecap="round"
-      strokeLinejoin="round"
-    >
-      <path d="M15 14c.2-1 .7-1.7 1.5-2.5 1-.9 1.5-2.2 1.5-3.5A6 6 0 0 0 6 8c0 1 .2 2.2 1.5 3.5.7.9 1.3 1.5 1.5 2.5" />
-      <path d="M9 18h6" />
-      <path d="M10 22h4" />
-    </svg>
-  )
-}

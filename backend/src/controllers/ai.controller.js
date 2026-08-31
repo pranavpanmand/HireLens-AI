@@ -34,31 +34,62 @@ exports.analyzeResumeHandler = analyzeResumeHandler;
 const generateCoverLetterHandler = async (req, res, next) => {
     try {
         const userId = req.user.id;
-        const { jobId } = req.body;
-        if (!jobId) throw new errorHandler_1.AppError('jobId is required', 400);
+        const { jobId, jobTitle, company, jobDescription, resumeId, customAchievements } = req.body;
 
-        const [resume, job] = await Promise.all([
-            Resume_1.Resume.findOne({ userId, isPrimary: true }),
-            JobPosting_1.JobPosting.findById(jobId).lean()
-        ]);
+        let resume;
+        if (resumeId) {
+            resume = await Resume_1.Resume.findOne({ _id: resumeId, userId });
+        }
+        if (!resume) {
+            resume = await Resume_1.Resume.findOne({ userId, isPrimary: true });
+        }
+        if (!resume) {
+            resume = await Resume_1.Resume.findOne({ userId });
+        }
 
-        if (!resume || !resume.parsedText) throw new errorHandler_1.AppError('No resume found', 404);
-        if (!job) throw new errorHandler_1.AppError('Job not found', 404);
+        if (!resume || !resume.parsedText) {
+            throw new errorHandler_1.AppError('No resume found. Please upload a resume first.', 404);
+        }
 
-        // Check if one already exists
-        let existingCL = await CoverLetter.findOne({ userId, jobId });
-        if (existingCL) {
-            return res.json({ success: true, data: existingCL });
+        let targetTitle = jobTitle;
+        let targetCompany = company;
+        let targetDescription = jobDescription;
+
+        if (jobId) {
+            const job = await JobPosting_1.JobPosting.findById(jobId).lean();
+            if (job) {
+                targetTitle = targetTitle || job.title;
+                targetCompany = targetCompany || job.company;
+                targetDescription = targetDescription || job.description;
+
+                // Check if one already exists for this jobId
+                let existingCL = await CoverLetter.findOne({ userId, jobId });
+                if (existingCL) {
+                    return res.json({ success: true, data: existingCL });
+                }
+            }
+        }
+
+        if (!targetTitle || !targetCompany) {
+            throw new errorHandler_1.AppError('Job Title and Company are required', 400);
+        }
+
+        let fullResumeText = resume.parsedText;
+        if (customAchievements && customAchievements.trim()) {
+            fullResumeText += `\n\nKey Achievements & Highlights:\n${customAchievements}`;
         }
 
         const result = await (0, ai_service_1.generateCoverLetter)(
-            resume.parsedText, job.description, job.title, job.company
+            fullResumeText, 
+            targetDescription || `${targetTitle} position at ${targetCompany}`, 
+            targetTitle, 
+            targetCompany
         );
         
         // Save to DB
         const coverLetter = await CoverLetter.create({
             userId,
-            jobId,
+            jobId: jobId || null,
             coverLetter: result.coverLetter,
             matchedSkills: result.matchedSkills || [],
             keyHighlights: result.keyHighlights || []
@@ -75,24 +106,40 @@ exports.generateCoverLetterHandler = generateCoverLetterHandler;
 const startMockInterview = async (req, res, next) => {
     try {
         const userId = req.user.id;
-        const { jobId } = req.body;
-        if (!jobId) throw new errorHandler_1.AppError('jobId is required', 400);
+        const { jobId, jobTitle, company, jobDescription } = req.body;
 
-        const job = await JobPosting_1.JobPosting.findById(jobId).lean();
-        if (!job) throw new errorHandler_1.AppError('Job not found', 404);
+        let title = jobTitle || "Target Position";
+        let companyName = company || "Target Company";
+        let description = jobDescription || "General Technical & Behavioral Interview";
+        let validJobId = null;
 
-        const { questions } = await (0, ai_service_1.generateMockQuestions)(job.description, job.title);
+        if (jobId && mongoose.Types.ObjectId.isValid(jobId)) {
+            const job = await JobPosting_1.JobPosting.findById(jobId).lean();
+            if (job) {
+                title = job.title;
+                companyName = job.company;
+                description = job.description;
+                validJobId = job._id;
+            }
+        }
+
+        const { questions } = await (0, ai_service_1.generateMockQuestions)(description, title);
 
         const session = await MockInterviewSession.create({
             userId,
-            jobId,
-            jobTitle: job.title,
-            company: job.company,
-            questions,
+            jobId: validJobId,
+            jobTitle: title,
+            company: companyName,
+            questions: questions.map(q => ({
+                question: q.question,
+                category: q.category,
+                difficulty: q.difficulty,
+                tips: q.tips
+            })),
             answers: []
         });
 
-        res.json({ success: true, data: { sessionId: session._id, questions } });
+        res.json({ success: true, data: session });
     } catch (error) {
         next(error);
     }

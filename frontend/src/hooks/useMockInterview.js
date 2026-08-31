@@ -3,10 +3,19 @@ import { fetchApi } from "@/services/api";
 
 export const useStartMockInterview = () => {
   return useMutation({
-    mutationFn: async (jobId) => {
+    mutationFn: async (payload) => {
+      const body = typeof payload === "string" 
+        ? { jobId: payload } 
+        : {
+            jobId: payload?.id || payload?.jobId,
+            jobTitle: payload?.title || payload?.jobTitle,
+            company: payload?.company,
+            jobDescription: payload?.description || payload?.jobDescription
+          };
+
       const response = await fetchApi("/ai/mock-interview/start", {
         method: "POST",
-        body: JSON.stringify({ jobId })
+        body: JSON.stringify(body)
       });
       return response;
     }

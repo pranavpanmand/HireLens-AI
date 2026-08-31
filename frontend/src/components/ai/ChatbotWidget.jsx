@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, Send, Loader2, Minimize2, Maximize2, Paperclip, FileText, ImageIcon } from "lucide-react";
+import { MessageSquare, X, Send, Loader2, Minimize2, Maximize2, Paperclip, FileText, ImageIcon, Sparkles } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -19,18 +19,39 @@ export function ChatbotWidget() {
   const { messages, sendMessage, isLoading, error } = useChatbot();
   const messagesEndRef = useRef(null);
 
-  const quickReplies = [
-    "What jobs match me best?",
-    "How can I improve my resume?",
-    "Prep me for my next interview"
-  ];
-
   // Auto-scroll to bottom
   useEffect(() => {
     if (messagesEndRef.current) {
       messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading]);
+
+  const parseMessageContent = (content) => {
+    if (!content) return { text: "", suggestions: [] };
+    const parts = content.split("---SUGGESTIONS---");
+    const mainText = parts[0].trim();
+    let suggestions = [];
+    if (parts[1]) {
+      suggestions = parts[1]
+        .split("\n")
+        .map(line => line.replace(/^-\s*/, '').trim())
+        .filter(Boolean);
+    }
+    return { text: mainText, suggestions };
+  };
+
+  const getActiveSuggestions = () => {
+    const lastAssistantMsg = [...messages].reverse().find(m => m.role === 'assistant');
+    if (lastAssistantMsg) {
+      const { suggestions } = parseMessageContent(lastAssistantMsg.content);
+      if (suggestions.length > 0) return suggestions.slice(0, 3);
+    }
+    return [
+      "What jobs match me best?",
+      "How can I improve my resume?",
+      "Prep me for my next interview"
+    ];
+  };
 
   if (!user) return null; // Only show for logged in users
 
@@ -168,7 +189,7 @@ export function ChatbotWidget() {
                           ) : (
                             <div 
                               className="prose prose-sm dark:prose-invert max-w-none text-sm [&>p]:mb-2 [&>p:last-child]:mb-0"
-                              dangerouslySetInnerHTML={createMarkup(msg.content)}
+                              dangerouslySetInnerHTML={createMarkup(parseMessageContent(msg.content).text)}
                             />
                           )}
                         </div>
@@ -197,17 +218,23 @@ export function ChatbotWidget() {
 
                 {/* Input Area */}
                 <div className="p-4 border-t border-border bg-background flex-shrink-0">
-                  {messages.length === 1 && (
-                    <div className="flex flex-wrap gap-2 mb-3">
-                      {quickReplies.map((reply, idx) => (
-                        <button
-                          key={idx}
-                          onClick={() => handleQuickReply(reply)}
-                          className="text-xs bg-muted hover:bg-muted/80 text-foreground px-3 py-1.5 rounded-full transition-colors border border-border"
-                        >
-                          {reply}
-                        </button>
-                      ))}
+                  {!isLoading && (
+                    <div className="flex flex-col gap-1 mb-3">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
+                        <Sparkles className="w-3 h-3 text-primary animate-pulse" /> Suggested Predictions
+                      </span>
+                      <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
+                        {getActiveSuggestions().map((reply, idx) => (
+                          <button
+                            key={idx}
+                            type="button"
+                            onClick={() => handleQuickReply(reply)}
+                            className="text-xs bg-primary/10 hover:bg-primary/20 text-primary px-2.5 py-1 rounded-full transition-all border border-primary/20 font-medium hover:scale-[1.02] active:scale-[0.98] text-left truncate max-w-full"
+                          >
+                            {reply}
+                          </button>
+                        ))}
+                      </div>
                     </div>
                   )}
                   

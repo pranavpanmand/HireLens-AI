@@ -72,8 +72,10 @@ export const useAnalyzeMatch = () => {
   const { user } = useAuth();
 
   return useMutation({
-    mutationFn: async ({ resumeId, jobId }) => {
+    mutationFn: async (params) => {
       if (!user) throw new Error("Not authenticated");
+      const jobId = typeof params === "string" ? params : params?.jobId;
+      if (!jobId) throw new Error("Job ID is required");
       const match = await matchApi.generateMatch(jobId);
       return mapMatch(match);
     },

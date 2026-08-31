@@ -15,8 +15,24 @@ async function start() {
     catch (err) {
         console.error('Failed to connect to MongoDB, but starting server anyway for API testing:', err);
     }
-    app_1.default.listen(env_1.env.PORT, () => {
+    const server = app_1.default.listen(env_1.env.PORT, () => {
         console.log(`🚀 Server running on port ${env_1.env.PORT} [${env_1.env.NODE_ENV}]`);
+    });
+
+    server.on('error', (err) => {
+        if (err.code === 'EADDRINUSE') {
+            console.error(`⚠️ Port ${env_1.env.PORT} is busy. Cleaning up...`);
+            process.exit(1);
+        } else {
+            console.error('Server error:', err);
+        }
+    });
+
+    process.on('SIGINT', () => {
+        server.close(() => process.exit(0));
+    });
+    process.on('SIGTERM', () => {
+        server.close(() => process.exit(0));
     });
 }
 start().catch((error) => {

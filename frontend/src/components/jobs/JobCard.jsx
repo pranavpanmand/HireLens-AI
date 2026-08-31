@@ -130,19 +130,22 @@ export const JobCard = ({ job, onAnalyze, index = 0 }) => {
               </p>
 
               {/* Actions */}
-              <div className="flex items-center gap-3 mt-4 relative z-[20]">
+              <div className="flex flex-wrap items-center gap-3 mt-4 relative z-[30] pointer-events-auto">
                 <Button
-                  onClick={() => onAnalyze(job)}
+                  onClick={(e) => {
+                    e.preventDefault();
+                    e.stopPropagation();
+                    onAnalyze(job);
+                  }}
                   className="bg-gradient-primary hover:opacity-90 transition-opacity">
-                  
                   Analyze Match
                 </Button>
                 <Button variant="outline" className="bg-background/50 backdrop-blur-sm hover:bg-background/80" asChild>
-                  <Link to={`/jobs/${job.id || job._id}`}>View Details →</Link>
+                  <Link to={`/jobs/${job.id || job._id}`} onClick={(e) => e.stopPropagation()}>View Details →</Link>
                 </Button>
                 {job.applyUrl && (
                   <Button variant="ghost" className="hover:bg-muted/50 backdrop-blur-sm" asChild>
-                    <a href={job.applyUrl} target="_blank" rel="noopener noreferrer" className="flex items-center gap-2">
+                    <a href={job.applyUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-2">
                       Apply Now
                       <ExternalLink className="w-4 h-4" />
                     </a>

@@ -14,8 +14,27 @@
     <meta name="twitter:card" content="summary_large_image" />
   </head>
 
-  <body>
-    <div id="root"></div>
+  <body class="bg-slate-50 dark:bg-slate-900">
+    <div id="root">
+      <div id="initial-loader" style="position: fixed; top: 0; left: 0; right: 0; bottom: 0; display: flex; align-items: center; justify-content: center; background-color: #0f172a; z-index: 9999; transition: opacity 0.5s ease;">
+        <div style="display: flex; flex-direction: column; items-center; justify-content: center; gap: 1rem; text-align: center;">
+          <div style="width: 60px; height: 60px; border-radius: 1rem; background: linear-gradient(135deg, #0ea5e9, #6366f1); display: flex; align-items: center; justify-content: center; animation: pulse 2s cubic-bezier(0.4, 0, 0.6, 1) infinite; margin: 0 auto;">
+            <svg width="30" height="30" viewBox="0 0 24 24" fill="none" stroke="white" stroke-width="2" stroke-linecap="round" stroke-linejoin="round">
+              <rect x="2" y="7" width="20" height="14" rx="2" ry="2"></rect>
+              <path d="M16 21V5a2 2 0 0 0-2-2h-4a2 2 0 0 0-2 2v16"></path>
+            </svg>
+          </div>
+          <h1 style="font-family: system-ui, -apple-system, sans-serif; font-size: 1.5rem; font-weight: 700; color: white; margin: 0;">Career Compass <span style="color: #eab308;">AI</span></h1>
+          <div style="width: 120px; height: 4px; background: rgba(255,255,255,0.1); border-radius: 2px; margin: 0 auto; overflow: hidden; position: relative;">
+            <div style="position: absolute; top: 0; left: 0; height: 100%; background: #0ea5e9; width: 50%; border-radius: 2px; animation: progress 1.5s ease-in-out infinite alternate;"></div>
+          </div>
+        </div>
+      </div>
+      <style>
+        @keyframes pulse { 0%, 100% { opacity: 1; transform: scale(1); } 50% { opacity: .7; transform: scale(0.95); } }
+        @keyframes progress { 0% { transform: translateX(-100%); } 100% { transform: translateX(200%); } }
+      </style>
+    </div>
     <script type="module" src="/src/main.jsx"></script>
   </body>
 </html>

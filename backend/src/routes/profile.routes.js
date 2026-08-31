@@ -21,6 +21,9 @@ router.put('/basic-info', profile_controller_1.updateBasicInfo);
 router.put('/education', profile_controller_1.updateEducation);
 router.put('/experience', profile_controller_1.updateExperience);
 router.put('/projects', profile_controller_1.updateProjects);
+router.put('/preferences', profile_controller_1.updatePreferences);
 router.put('/skills', profile_controller_1.updateSkills);
-
+router.put('/summary', profile_controller_1.updateSummary);
+router.put('/languages', profile_controller_1.updateLanguages);
+router.put('/achievements', profile_controller_1.updateAccomplishments);
 exports.default = router;

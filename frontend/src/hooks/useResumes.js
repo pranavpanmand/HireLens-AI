@@ -24,6 +24,8 @@ const mapResume = (resume) => ({
   parsed_text: resume.parsedText,
   skills_extracted: resume.skillsExtracted,
   is_primary: resume.isPrimary,
+  cloudinary_url: resume.cloudinaryUrl,
+  public_id: resume.publicId,
   created_at: resume.createdAt,
   updated_at: resume.updatedAt
 });
@@ -70,6 +72,7 @@ export const useUploadResume = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["resumes"] });
       queryClient.invalidateQueries({ queryKey: ["primary-resume"] });
+      queryClient.invalidateQueries({ queryKey: ["profile"] });
       toast.success("Resume uploaded successfully!");
     },
     onError: (error) => {

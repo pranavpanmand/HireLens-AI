@@ -8,8 +8,7 @@ export const useRecommendations = (limit = 10) => {
   return useQuery({
     queryKey: ["recommendations", user?.id, limit],
     queryFn: async () => {
-      const response = await fetchApi(`/recommendations?limit=${limit}`);
-      return response.data;
+      return await fetchApi(`/recommendations?limit=${limit}`);
     },
     enabled: !!user && hasRole("student")
   });

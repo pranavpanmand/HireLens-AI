@@ -1,4 +1,4 @@
-import { useState } from "react";
+import { useState, useEffect } from "react";
 import { Search, MapPin, Briefcase, Filter, X, ChevronDown, ChevronUp, SlidersHorizontal } from "lucide-react";
 import { Input } from "@/components/ui/input";
 import { Button } from "@/components/ui/button";
@@ -37,6 +37,16 @@ export const JobFilters = ({ filters, onFiltersChange, onSearch, totalJobs, sort
   const [locationInput, setLocationInput] = useState("");
   const [skillInput, setSkillInput] = useState("");
   const [showLocationDropdown, setShowLocationDropdown] = useState(false);
+  const [localSearch, setLocalSearch] = useState(filters.search || "");
+
+  useEffect(() => {
+    const timer = setTimeout(() => {
+      if (filters.search !== localSearch) {
+        updateFilter("search", localSearch);
+      }
+    }, 400);
+    return () => clearTimeout(timer);
+  }, [localSearch]);
 
   const updateFilter = (key, value) => {
     onFiltersChange({ ...filters, [key]: value });
@@ -296,8 +306,8 @@ export const JobFilters = ({ filters, onFiltersChange, onSearch, totalJobs, sort
             <Search className="absolute left-3 top-1/2 -translate-y-1/2 w-5 h-5 text-muted-foreground" />
             <Input
               placeholder="Job title, keywords, or company"
-              value={filters.search || ""}
-              onChange={(e) => updateFilter("search", e.target.value)}
+              value={localSearch}
+              onChange={(e) => setLocalSearch(e.target.value)}
               onKeyDown={(e) => { if (e.key === "Enter") onSearch(); }}
               className="pl-10 h-12 text-base"
             />

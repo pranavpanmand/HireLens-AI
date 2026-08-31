@@ -18,6 +18,8 @@ const loginSchema = zod_1.z.object({
 });
 router.post('/register', (0, validate_1.validate)(registerSchema), auth_controller_1.register);
 router.post('/login', (0, validate_1.validate)(loginSchema), auth_controller_1.login);
+router.post('/forgot-password', auth_controller_1.forgotPassword);
+router.post('/reset-password/:token', auth_controller_1.resetPassword);
 router.post('/logout', auth_1.requireAuth, auth_controller_1.logout);
 router.get('/me', auth_1.requireAuth, auth_controller_1.getMe);
 exports.default = router;

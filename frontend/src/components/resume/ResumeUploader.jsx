@@ -9,10 +9,12 @@ import { cn } from "@/lib/utils";
 
 
 
-export const ResumeUploader = ({ onUpload, currentResume }) => {
+export const ResumeUploader = ({ onUpload, currentResume, currentResumeUrl, onView }) => {
   const [isDragging, setIsDragging] = useState(false);
   const [uploadedFile, setUploadedFile] = useState(null);
   const [isUploading, setIsUploading] = useState(false);
+  const [showReplace, setShowReplace] = useState(false);
+  const [isViewing, setIsViewing] = useState(false);
 
   const handleDragOver = useCallback((e) => {
     e.preventDefault();
@@ -89,6 +91,54 @@ export const ResumeUploader = ({ onUpload, currentResume }) => {
             </div>
           </motion.div> :
 
+        (currentResume && !showReplace) ?
+        <motion.div
+          key="current"
+          initial={{ opacity: 0, scale: 0.95 }}
+          animate={{ opacity: 1, scale: 1 }}
+          exit={{ opacity: 0, scale: 0.95 }}
+          className="p-6 rounded-2xl border-2 border-primary/20 bg-primary/5">
+          
+            <div className="flex items-center gap-4">
+              <div className="w-14 h-14 rounded-xl bg-primary/10 flex items-center justify-center">
+                <FileText className="w-7 h-7 text-primary" />
+              </div>
+              <div className="flex-1 min-w-0">
+                <p className="font-medium text-foreground truncate">{currentResume}</p>
+                <p className="text-sm text-muted-foreground">
+                  Primary Resume Active
+                </p>
+              </div>
+              <div className="flex items-center gap-2">
+                {onView && (
+                  <Button variant="outline" size="sm" onClick={() => setIsViewing(!isViewing)}>
+                    {isViewing ? "Hide" : "View"}
+                  </Button>
+                )}
+                <Button variant="secondary" size="sm" onClick={() => setShowReplace(true)}>
+                  Replace
+                </Button>
+              </div>
+            </div>
+            
+            <AnimatePresence>
+              {isViewing && currentResumeUrl && (
+                <motion.div
+                  initial={{ opacity: 0, height: 0 }}
+                  animate={{ opacity: 1, height: 600 }}
+                  exit={{ opacity: 0, height: 0 }}
+                  className="mt-6 w-full rounded-xl overflow-hidden border border-border"
+                >
+                  <iframe 
+                    src={`${currentResumeUrl}#toolbar=0`} 
+                    className="w-full h-full"
+                    title="Resume Viewer"
+                  />
+                </motion.div>
+              )}
+            </AnimatePresence>
+          </motion.div> :
+
         <motion.label
           key="upload"
           initial={{ opacity: 0, scale: 0.95 }}
@@ -121,7 +171,7 @@ export const ResumeUploader = ({ onUpload, currentResume }) => {
               )} />
               </div>
               <h3 className="font-display font-semibold text-lg text-foreground mb-2">
-                {isDragging ? "Drop your resume here" : "Upload your resume"}
+                {isDragging ? "Drop your resume here" : currentResume ? "Upload a new resume" : "Upload your resume"}
               </h3>
               <p className="text-sm text-muted-foreground mb-4">
                 Drag and drop your PDF resume, or click to browse
@@ -130,6 +180,19 @@ export const ResumeUploader = ({ onUpload, currentResume }) => {
                 <FileText className="w-4 h-4" />
                 <span>PDF format only, max 10MB</span>
               </div>
+              {showReplace && currentResume && (
+                <Button 
+                  variant="ghost" 
+                  size="sm" 
+                  className="mt-4 text-xs h-8"
+                  onClick={(e) => {
+                    e.preventDefault();
+                    setShowReplace(false);
+                  }}
+                >
+                  Cancel Replace
+                </Button>
+              )}
             </div>
           </motion.label>
         }

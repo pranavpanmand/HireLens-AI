@@ -1,6 +1,6 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.updateSkills = exports.updateProjects = exports.updateExperience = exports.updateEducation = exports.updateBasicInfo = exports.getProfile = void 0;
+exports.updatePreferences = exports.updateSkills = exports.updateProjects = exports.updateExperience = exports.updateEducation = exports.updateBasicInfo = exports.getProfile = void 0;
 const User_1 = require("../models/User");
 const StudentProfile_1 = require("../models/StudentProfile");
 const errorHandler_1 = require("../middleware/errorHandler");
@@ -59,6 +59,23 @@ const updateBasicInfo = async (req, res, next) => {
     }
 };
 exports.updateBasicInfo = updateBasicInfo;
+
+const updatePreferences = async (req, res, next) => {
+    try {
+        const profile = await getOrCreateProfile(req.user.id);
+        profile.careerPreferences = {
+            ...profile.careerPreferences,
+            jobType: req.body.preferredJobType,
+            availability: req.body.availability,
+            locations: req.body.preferredLocation ? [req.body.preferredLocation] : []
+        };
+        await profile.save();
+        res.json({ success: true, data: profile.careerPreferences });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.updatePreferences = updatePreferences;
 
 const updateEducation = async (req, res, next) => {
     try {
@@ -160,3 +177,42 @@ const updateSkills = async (req, res, next) => {
     }
 };
 exports.updateSkills = updateSkills;
+
+const updateSummary = async (req, res, next) => {
+    try {
+        const { summary } = req.body;
+        const profile = await getOrCreateProfile(req.user.id);
+        profile.summary = summary;
+        await profile.save();
+        res.json({ success: true, data: profile.summary });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.updateSummary = updateSummary;
+
+const updateLanguages = async (req, res, next) => {
+    try {
+        const { languages } = req.body;
+        const profile = await getOrCreateProfile(req.user.id);
+        profile.languages = languages;
+        await profile.save();
+        res.json({ success: true, data: profile.languages });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.updateLanguages = updateLanguages;
+
+const updateAccomplishments = async (req, res, next) => {
+    try {
+        const { achievements } = req.body;
+        const profile = await getOrCreateProfile(req.user.id);
+        profile.achievements = achievements;
+        await profile.save();
+        res.json({ success: true, data: profile.achievements });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.updateAccomplishments = updateAccomplishments;

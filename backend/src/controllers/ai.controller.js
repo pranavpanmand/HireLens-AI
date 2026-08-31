@@ -10,8 +10,8 @@ const ai_service_1 = require("../services/ai.service");
 const errorHandler_1 = require("../middleware/errorHandler");
 const mongoose = require("mongoose");
 
-// ---- In-memory store for mock interviews (could be a collection later) ----
-const mockSessions = new Map();
+const { MockInterviewSession } = require("../models/MockInterviewSession");
+const { CoverLetter } = require("../models/CoverLetter");
 
 // ========================= RESUME ANALYZER =========================
 const analyzeResumeHandler = async (req, res, next) => {
@@ -45,10 +45,26 @@ const generateCoverLetterHandler = async (req, res, next) => {
         if (!resume || !resume.parsedText) throw new errorHandler_1.AppError('No resume found', 404);
         if (!job) throw new errorHandler_1.AppError('Job not found', 404);
 
+        // Check if one already exists
+        let existingCL = await CoverLetter.findOne({ userId, jobId });
+        if (existingCL) {
+            return res.json({ success: true, data: existingCL });
+        }
+
         const result = await (0, ai_service_1.generateCoverLetter)(
             resume.parsedText, job.description, job.title, job.company
         );
-        res.json({ success: true, data: result });
+        
+        // Save to DB
+        const coverLetter = await CoverLetter.create({
+            userId,
+            jobId,
+            coverLetter: result.coverLetter,
+            matchedSkills: result.matchedSkills || [],
+            keyHighlights: result.keyHighlights || []
+        });
+
+        res.json({ success: true, data: coverLetter });
     } catch (error) {
         next(error);
     }
@@ -67,20 +83,16 @@ const startMockInterview = async (req, res, next) => {
 
         const { questions } = await (0, ai_service_1.generateMockQuestions)(job.description, job.title);
 
-        const sessionId = new mongoose.Types.ObjectId().toString();
-        const session = {
-            id: sessionId,
+        const session = await MockInterviewSession.create({
             userId,
             jobId,
             jobTitle: job.title,
             company: job.company,
             questions,
-            answers: [],
-            createdAt: new Date()
-        };
-        mockSessions.set(sessionId, session);
+            answers: []
+        });
 
-        res.json({ success: true, data: { sessionId, questions } });
+        res.json({ success: true, data: { sessionId: session._id, questions } });
     } catch (error) {
         next(error);
     }
@@ -92,9 +104,9 @@ const submitAnswer = async (req, res, next) => {
         const { sessionId } = req.params;
         const { questionIndex, answer } = req.body;
 
-        const session = mockSessions.get(sessionId);
+        const session = await MockInterviewSession.findById(sessionId);
         if (!session) throw new errorHandler_1.AppError('Session not found', 404);
-        if (session.userId !== req.user.id) throw new errorHandler_1.AppError('Unauthorized', 403);
+        if (session.userId.toString() !== req.user.id) throw new errorHandler_1.AppError('Unauthorized', 403);
         if (questionIndex < 0 || questionIndex >= session.questions.length) {
             throw new errorHandler_1.AppError('Invalid question index', 400);
         }
@@ -104,15 +116,25 @@ const submitAnswer = async (req, res, next) => {
 
         const evaluation = await (0, ai_service_1.evaluateAnswer)(question, answer, job?.description || '');
 
-        session.answers[questionIndex] = { questionIndex, userAnswer: answer, ...evaluation };
+        const answerObj = { questionIndex, userAnswer: answer, ...evaluation };
+        
+        // Ensure answers array is big enough and update
+        if (!session.answers) session.answers = [];
+        const currentAnswerIndex = session.answers.findIndex(a => a.questionIndex === questionIndex);
+        if (currentAnswerIndex !== -1) {
+             session.answers[currentAnswerIndex] = answerObj;
+        } else {
+             session.answers.push(answerObj);
+        }
 
         // Calculate overall score if all questions answered
-        const answeredCount = session.answers.filter(Boolean).length;
+        const answeredCount = session.answers.length;
         if (answeredCount === session.questions.length) {
             session.overallScore = Math.round(
                 session.answers.reduce((sum, a) => sum + (a?.score || 0), 0) / session.questions.length
             );
         }
+        await session.save();
 
         res.json({ success: true, data: { evaluation, answeredCount, totalQuestions: session.questions.length } });
     } catch (error) {
@@ -124,21 +146,19 @@ exports.submitAnswer = submitAnswer;
 const getMockHistory = async (req, res, next) => {
     try {
         const userId = req.user.id;
-        const sessions = [];
-        for (const [id, session] of mockSessions) {
-            if (session.userId === userId) {
-                sessions.push({
-                    id,
-                    jobTitle: session.jobTitle,
-                    company: session.company,
-                    questionsCount: session.questions.length,
-                    answeredCount: session.answers.filter(Boolean).length,
-                    overallScore: session.overallScore || null,
-                    createdAt: session.createdAt
-                });
-            }
-        }
-        sessions.sort((a, b) => new Date(b.createdAt) - new Date(a.createdAt));
+        const dbSessions = await MockInterviewSession.find({ userId: req.user.id })
+            .sort({ createdAt: -1 })
+            .lean();
+            
+        const sessions = dbSessions.map(session => ({
+            id: session._id,
+            jobTitle: session.jobTitle,
+            company: session.company,
+            questionsCount: session.questions.length,
+            answeredCount: session.answers.length,
+            overallScore: session.overallScore || null,
+            createdAt: session.createdAt
+        }));
         res.json({ success: true, data: sessions });
     } catch (error) {
         next(error);
@@ -190,7 +210,7 @@ const chat = async (req, res, next) => {
             resumeSummary: resume?.parsedText?.substring(0, 2000) || ''
         };
 
-        const response = await (0, ai_service_1.chatWithAI)(message, userContext, conversationHistory);
+        const response = await (0, ai_service_1.chatWithAI)(message, userContext, conversationHistory, req.body.file);
         res.json({ success: true, data: { response } });
     } catch (error) {
         next(error);

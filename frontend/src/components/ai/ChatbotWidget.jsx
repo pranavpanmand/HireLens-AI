@@ -1,6 +1,6 @@
 import { useState, useRef, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { MessageSquare, X, Send, Loader2, Minimize2, Maximize2 } from "lucide-react";
+import { MessageSquare, X, Send, Loader2, Minimize2, Maximize2, Paperclip, FileText, ImageIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { ScrollArea } from "@/components/ui/scroll-area";
@@ -14,8 +14,10 @@ export function ChatbotWidget() {
   const [isOpen, setIsOpen] = useState(false);
   const [isMinimized, setIsMinimized] = useState(false);
   const [inputValue, setInputValue] = useState("");
+  const [selectedFile, setSelectedFile] = useState(null);
+  const fileInputRef = useRef(null);
   const { messages, sendMessage, isLoading, error } = useChatbot();
-  const scrollRef = useRef(null);
+  const messagesEndRef = useRef(null);
 
   const quickReplies = [
     "What jobs match me best?",
@@ -25,8 +27,8 @@ export function ChatbotWidget() {
 
   // Auto-scroll to bottom
   useEffect(() => {
-    if (scrollRef.current) {
-      scrollRef.current.scrollTop = scrollRef.current.scrollHeight;
+    if (messagesEndRef.current) {
+      messagesEndRef.current.scrollIntoView({ behavior: 'smooth' });
     }
   }, [messages, isLoading]);
 
@@ -34,11 +36,41 @@ export function ChatbotWidget() {
 
   const handleSubmit = async (e) => {
     e.preventDefault();
-    if (!inputValue.trim() || isLoading) return;
+    if ((!inputValue.trim() && !selectedFile) || isLoading) return;
     
     const text = inputValue;
+    const file = selectedFile;
+    
     setInputValue("");
-    await sendMessage(text);
+    setSelectedFile(null);
+    
+    let fileData = null;
+    if (file) {
+      const reader = new FileReader();
+      const base64Promise = new Promise((resolve) => {
+        reader.onload = () => resolve(reader.result.split(',')[1]);
+      });
+      reader.readAsDataURL(file);
+      const base64 = await base64Promise;
+      fileData = {
+        name: file.name,
+        type: file.type,
+        base64
+      };
+    }
+
+    await sendMessage(text, fileData);
+  };
+
+  const handleFileChange = (e) => {
+    const file = e.target.files?.[0];
+    if (file) {
+      if (file.size > 5 * 1024 * 1024) {
+        alert("File size must be under 5MB");
+        return;
+      }
+      setSelectedFile(file);
+    }
   };
 
   const handleQuickReply = async (text) => {
@@ -109,7 +141,7 @@ export function ChatbotWidget() {
             {/* Chat Content */}
             {!isMinimized && (
               <>
-                <ScrollArea className="flex-1 p-4" ref={scrollRef}>
+                <ScrollArea className="flex-1 p-4">
                   <div className="flex flex-col gap-4 pb-4">
                     {messages.map((msg, idx) => (
                       <div 
@@ -124,7 +156,15 @@ export function ChatbotWidget() {
                           }`}
                         >
                           {msg.role === 'user' ? (
-                            <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+                            <div>
+                              {msg.attachment && (
+                                <div className="flex items-center gap-2 mb-2 p-2 bg-primary-foreground/10 rounded-lg text-xs opacity-90">
+                                  <Paperclip className="w-3 h-3" />
+                                  <span className="truncate">{msg.attachment}</span>
+                                </div>
+                              )}
+                              <p className="whitespace-pre-wrap text-sm">{msg.content}</p>
+                            </div>
                           ) : (
                             <div 
                               className="prose prose-sm dark:prose-invert max-w-none text-sm [&>p]:mb-2 [&>p:last-child]:mb-0"
@@ -151,6 +191,7 @@ export function ChatbotWidget() {
                         </span>
                       </div>
                     )}
+                    <div ref={messagesEndRef} />
                   </div>
                 </ScrollArea>
 
@@ -170,22 +211,52 @@ export function ChatbotWidget() {
                     </div>
                   )}
                   
-                  <form onSubmit={handleSubmit} className="flex gap-2">
-                    <Input
-                      placeholder="Ask me anything..."
-                      value={inputValue}
-                      onChange={(e) => setInputValue(e.target.value)}
-                      className="rounded-full focus-visible:ring-primary h-10"
-                      disabled={isLoading}
-                    />
-                    <Button 
-                      type="submit" 
-                      size="icon" 
-                      className="rounded-full h-10 w-10 shrink-0 bg-primary hover:bg-primary/90"
-                      disabled={!inputValue.trim() || isLoading}
-                    >
-                      <Send className="w-4 h-4" />
-                    </Button>
+                  <form onSubmit={handleSubmit} className="flex flex-col gap-2">
+                    {selectedFile && (
+                      <div className="flex items-center justify-between p-2 bg-muted rounded-lg text-xs">
+                        <div className="flex items-center gap-2 truncate">
+                          {selectedFile.type.startsWith('image/') ? <ImageIcon className="w-4 h-4 text-primary" /> : <FileText className="w-4 h-4 text-primary" />}
+                          <span className="truncate font-medium">{selectedFile.name}</span>
+                        </div>
+                        <button type="button" onClick={() => setSelectedFile(null)} className="text-muted-foreground hover:text-destructive">
+                          <X className="w-4 h-4" />
+                        </button>
+                      </div>
+                    )}
+                    <div className="flex gap-2 items-center">
+                      <input 
+                        type="file" 
+                        ref={fileInputRef} 
+                        onChange={handleFileChange} 
+                        className="hidden" 
+                        accept="image/*,application/pdf"
+                      />
+                      <Button 
+                        type="button" 
+                        variant="ghost" 
+                        size="icon" 
+                        className="rounded-full shrink-0 text-muted-foreground hover:text-primary"
+                        onClick={() => fileInputRef.current?.click()}
+                        disabled={isLoading}
+                      >
+                        <Paperclip className="w-4 h-4" />
+                      </Button>
+                      <Input
+                        placeholder="Ask me anything..."
+                        value={inputValue}
+                        onChange={(e) => setInputValue(e.target.value)}
+                        className="rounded-full focus-visible:ring-primary h-10 flex-1"
+                        disabled={isLoading}
+                      />
+                      <Button 
+                        type="submit" 
+                        size="icon" 
+                        className="rounded-full h-10 w-10 shrink-0 bg-primary hover:bg-primary/90"
+                        disabled={(!inputValue.trim() && !selectedFile) || isLoading}
+                      >
+                        <Send className="w-4 h-4" />
+                      </Button>
+                    </div>
                   </form>
                 </div>
               </>

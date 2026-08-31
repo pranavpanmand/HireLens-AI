@@ -53,6 +53,7 @@ const studentProfileSchema = new mongoose.Schema({
         unique: true
     },
     // Sub-documents / Arrays
+    summary: { type: String },
     education: [educationSchema],
     experience: [experienceSchema],
     projects: [projectSchema],

@@ -21,7 +21,7 @@ function getGenAI() {
 
 function getModel() {
     return getGenAI().getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-lite-latest',
         generationConfig: { temperature: 0.2, responseMimeType: 'application/json' },
     });
 }
@@ -32,6 +32,31 @@ function cleanJSON(text) {
         cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
     }
     return JSON.parse(cleaned);
+}
+
+/**
+ * Utility to execute a Gemini API call with automatic retries for rate limits (429)
+ */
+async function callWithRetry(apiCall, maxRetries = 5) {
+    let lastError;
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await apiCall();
+        } catch (error) {
+            lastError = error;
+            if (error.status === 429 || (error.message && error.message.includes('429'))) {
+                // Add jitter to prevent thundering herd problem
+                const jitter = Math.random() * 5000;
+                const delay = (Math.pow(2, i) * 10000) + jitter;
+                console.warn(`[Gemini API] Rate limit hit. Retrying in ${Math.round(delay/1000)}s... (Attempt ${i + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+                throw error;
+            }
+        }
+    }
+    console.error("[Gemini API] Max retries reached.");
+    throw lastError;
 }
 
 /**
@@ -61,7 +86,7 @@ async function analyzeResume(resumeText) {
     Be specific and actionable. Reference actual content from the resume.
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await callWithRetry(() => model.generateContent(prompt));
     return cleanJSON(result.response.text());
 }
 
@@ -70,7 +95,7 @@ async function analyzeResume(resumeText) {
  */
 async function generateCoverLetter(resumeText, jobDescription, jobTitle, company) {
     const model = getGenAI().getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-lite-latest',
         generationConfig: { temperature: 0.4, responseMimeType: 'application/json' },
     });
     const prompt = `
@@ -98,7 +123,7 @@ async function generateCoverLetter(resumeText, jobDescription, jobTitle, company
     - Include a strong opening and closing
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await callWithRetry(() => model.generateContent(prompt));
     return cleanJSON(result.response.text());
 }
 
@@ -134,7 +159,7 @@ async function generateMockQuestions(jobDescription, jobTitle) {
     Mix difficulties.
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await callWithRetry(() => model.generateContent(prompt));
     return cleanJSON(result.response.text());
 }
 
@@ -165,16 +190,16 @@ async function evaluateAnswer(question, answer, jobDescription) {
     }
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await callWithRetry(() => model.generateContent(prompt));
     return cleanJSON(result.response.text());
 }
 
 /**
  * AI career chatbot — context-aware conversation.
  */
-async function chatWithAI(message, userContext, conversationHistory = []) {
+async function chatWithAI(message, userContext, conversationHistory = [], file = null) {
     const model = getGenAI().getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-lite-latest',
         generationConfig: { temperature: 0.5 },
     });
 
@@ -212,7 +237,17 @@ If they ask something outside career guidance, politely redirect.
         ]
     });
 
-    const result = await chat.sendMessage(message);
+    const parts = [{ text: message }];
+    if (file && file.inlineData) {
+        parts.push({
+            inlineData: {
+                data: file.inlineData.data,
+                mimeType: file.inlineData.mimeType
+            }
+        });
+    }
+
+    const result = await callWithRetry(() => chat.sendMessage(parts));
     return result.response.text();
 }
 
@@ -259,7 +294,7 @@ async function analyzeMatch(resumeText, jobDescription) {
     The learningPath should contain 1-3 items based on the most critical missingSkills.
     `;
 
-    const result = await model.generateContent(prompt);
+    const result = await callWithRetry(() => model.generateContent(prompt));
     const parsed = cleanJSON(result.response.text());
     return {
         matchScore: parsed.matchScore !== undefined ? parsed.matchScore : (parsed.match_score || 0),
@@ -276,7 +311,7 @@ async function analyzeMatch(resumeText, jobDescription) {
  */
 async function generateMatchReason(resumeText, jobTitle, jobSkills) {
     const model = getGenAI().getGenerativeModel({
-        model: 'gemini-2.5-flash',
+        model: 'gemini-flash-lite-latest',
         generationConfig: { temperature: 0.3 },
     });
     
@@ -291,9 +326,66 @@ async function generateMatchReason(resumeText, jobTitle, jobSkills) {
     `;
 
     try {
-        const result = await model.generateContent(prompt);
+        const result = await callWithRetry(() => model.generateContent(prompt));
         return result.response.text().trim();
     } catch (e) {
         return "Your profile skills align well with the requirements for this role.";
     }
 }
+
+/**
+ * Extract structured profile data from a resume text.
+ */
+async function extractProfileFromResume(resumeText) {
+    const model = getModel();
+    const prompt = `
+    You are an expert resume parser. Extract structured profile data from this resume text.
+    
+    Resume:
+    ${resumeText.substring(0, 15000)}
+    
+    Return a JSON object matching this schema exactly:
+    {
+      "education": [
+        {
+          "institution": string,
+          "degree": string,
+          "fieldOfStudy": string,
+          "startDate": string (YYYY-MM),
+          "endDate": string (YYYY-MM)
+        }
+      ],
+      "experience": [
+        {
+          "company": string,
+          "role": string,
+          "location": string,
+          "startDate": string (YYYY-MM),
+          "endDate": string (YYYY-MM),
+          "description": string
+        }
+      ],
+      "projects": [
+        {
+          "name": string,
+          "description": string,
+          "link": string
+        }
+      ],
+      "skills": string[],
+      "languages": string[]
+    }
+    
+    If any section is missing from the resume, return an empty array for it. Extract as much accurate detail as possible.
+    `;
+
+    try {
+        const result = await callWithRetry(() => model.generateContent(prompt));
+        return cleanJSON(result.response.text());
+    } catch (e) {
+        console.error("Profile extraction failed:", e.message);
+        return { education: [], experience: [], projects: [], skills: [], languages: [] };
+    }
+}
+
+exports.extractProfileFromResume = extractProfileFromResume;

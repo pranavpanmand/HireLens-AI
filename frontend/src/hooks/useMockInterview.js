@@ -8,7 +8,7 @@ export const useStartMockInterview = () => {
         method: "POST",
         body: JSON.stringify({ jobId })
       });
-      return response.data;
+      return response;
     }
   });
 };
@@ -20,7 +20,7 @@ export const useSubmitAnswer = () => {
         method: "POST",
         body: JSON.stringify({ questionIndex, answer })
       });
-      return response.data;
+      return response;
     }
   });
 };
@@ -30,7 +30,7 @@ export const useMockHistory = () => {
     queryKey: ["mock-interview-history"],
     queryFn: async () => {
       const response = await fetchApi("/ai/mock-interview/history");
-      return response.data;
+      return response;
     }
   });
 };

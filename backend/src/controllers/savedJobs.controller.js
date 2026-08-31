@@ -11,7 +11,7 @@ const getSavedJobs = async (req, res, next) => {
             .lean();
         res.json({
             success: true,
-            data: savedJobs.map(sj => sj.jobId),
+            data: savedJobs.map(sj => sj.jobId).filter(Boolean),
         });
     }
     catch (error) {

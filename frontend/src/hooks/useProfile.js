@@ -10,7 +10,13 @@ export const useProfile = () => {
     queryKey: ["profile", user?.id],
     queryFn: async () => {
       const response = await profileApi.getProfile();
-      return response || null;
+      if (!response) return null;
+      return {
+        ...response.profile,
+        location: [response.user.city, response.user.state, response.user.country].filter(Boolean).join(', '),
+        phone: response.user.phone,
+        profilePhotoUrl: response.user.profilePhotoUrl
+      };
     },
     enabled: !!user && hasRole("student")
   });
@@ -99,6 +105,45 @@ export const useUpdateSkills = () => {
       toast.success("Skills updated successfully");
     },
     onError: (error) => toast.error(error.message || "Failed to update skills")
+  });
+};
+
+export const useUpdateSummary = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: (summary) => profileApi.updateSummary(summary),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      toast.success("Summary updated successfully");
+    },
+    onError: (error) => toast.error(error.message || "Failed to update summary")
+  });
+};
+
+export const useUpdateLanguages = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: (languages) => profileApi.updateLanguages(languages),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      toast.success("Languages updated successfully");
+    },
+    onError: (error) => toast.error(error.message || "Failed to update languages")
+  });
+};
+
+export const useUpdateAccomplishments = () => {
+  const queryClient = useQueryClient();
+  const { user } = useAuth();
+  return useMutation({
+    mutationFn: (achievements) => profileApi.updateAccomplishments(achievements),
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["profile", user?.id] });
+      toast.success("Accomplishments updated successfully");
+    },
+    onError: (error) => toast.error(error.message || "Failed to update accomplishments")
   });
 };
 

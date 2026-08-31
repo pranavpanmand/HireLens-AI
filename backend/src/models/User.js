@@ -77,6 +77,8 @@ const userSchema = new mongoose_1.Schema({
     },
     profilePhotoUrl: { type: String },
     profilePhotoPublicId: { type: String },
+    resetPasswordToken: { type: String },
+    resetPasswordExpire: { type: Date },
 }, {
     timestamps: true,
 });

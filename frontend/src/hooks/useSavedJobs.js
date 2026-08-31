@@ -10,7 +10,7 @@ export const useSavedJobs = () => {
     queryKey: ["saved-jobs", user?.id],
     queryFn: async () => {
       const response = await fetchApi("/saved-jobs");
-      return response.data;
+      return response;
     },
     enabled: !!user,
   });

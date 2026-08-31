@@ -3,8 +3,10 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { useUpdateBasicInfo, useUpdatePreferences, useUpdateSkills } from "@/hooks/useProfile";
+import { useJobAlerts, useToggleJobAlerts } from "@/hooks/useJobAlerts";
 import { toast } from "sonner";
 import { X } from "lucide-react";
+import { Switch } from "@/components/ui/switch";
 
 export function BasicInfoModal({ profile, isOpen, onClose }) {
   const [formData, setFormData] = useState({
@@ -25,7 +27,14 @@ export function BasicInfoModal({ profile, isOpen, onClose }) {
   const handleSubmit = async (e) => {
     e.preventDefault();
     try {
-      await updateBasicInfo.mutateAsync(formData);
+      const parts = formData.location.split(',').map(s => s.trim());
+      const payload = {
+        phone: formData.phone,
+        city: parts[0] || "",
+        state: parts[1] || "",
+        country: parts[2] || ""
+      };
+      await updateBasicInfo.mutateAsync(payload);
       toast.success("Profile updated successfully");
       onClose();
     } catch (err) {
@@ -73,6 +82,8 @@ export function CareerPreferencesModal({ profile, isOpen, onClose }) {
     preferredLocation: "Any"
   });
   const updatePreferences = useUpdatePreferences();
+  const { data: alertData } = useJobAlerts();
+  const toggleAlerts = useToggleJobAlerts();
 
   useEffect(() => {
     if (profile?.careerPreferences) {
@@ -133,6 +144,21 @@ export function CareerPreferencesModal({ profile, isOpen, onClose }) {
               placeholder="e.g. Remote, Bangalore"
             />
           </div>
+          
+          <div className="space-y-2 pt-2 border-t border-border mt-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <label className="text-sm font-medium">Weekly Job Alerts</label>
+                <p className="text-xs text-muted-foreground">Receive weekly emails with tailored job matches.</p>
+              </div>
+              <Switch 
+                checked={alertData?.isEnabled || false} 
+                onCheckedChange={(checked) => toggleAlerts.mutate(checked)}
+                disabled={toggleAlerts.isPending}
+              />
+            </div>
+          </div>
+
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button type="submit" disabled={updatePreferences.isPending}>Save changes</Button>
@@ -299,7 +325,7 @@ export function ExperienceModal({ profile, isOpen, onClose }) {
     }
   }, [profile, isOpen]);
 
-  const addExp = () => setExperience([...experience, { title: "", company: "", location: "", startMonth: "", startYear: "", endMonth: "", endYear: "", isCurrent: false, description: "" }]);
+  const addExp = () => setExperience([...experience, { position: "", company: "", location: "", startDate: "", endDate: "", isCurrent: false, description: "" }]);
   const updateExp = (index, field, value) => {
     const newExp = [...experience];
     newExp[index][field] = value;
@@ -329,11 +355,19 @@ export function ExperienceModal({ profile, isOpen, onClose }) {
               <div className="grid grid-cols-2 gap-4">
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Job Title</label>
-                  <Input value={exp.title} onChange={e => updateExp(index, "title", e.target.value)} placeholder="e.g. Software Engineer" />
+                  <Input value={exp.position || exp.title} onChange={e => updateExp(index, "position", e.target.value)} placeholder="e.g. Software Engineer" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Company</label>
                   <Input value={exp.company} onChange={e => updateExp(index, "company", e.target.value)} placeholder="e.g. Google" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Start Date</label>
+                  <Input type="date" value={exp.startDate ? new Date(exp.startDate).toISOString().split('T')[0] : ""} onChange={e => updateExp(index, "startDate", e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">End Date</label>
+                  <Input type="date" value={exp.endDate ? new Date(exp.endDate).toISOString().split('T')[0] : ""} onChange={e => updateExp(index, "endDate", e.target.value)} disabled={exp.isCurrent} />
                 </div>
                 <div className="space-y-2 col-span-2">
                   <label className="text-sm font-medium">Description</label>
@@ -370,7 +404,7 @@ export function ProjectsModal({ profile, isOpen, onClose }) {
     }
   }, [profile, isOpen]);
 
-  const addProject = () => setProjects([...projects, { name: "", description: "", link: "", technologies: [] }]);
+  const addProject = () => setProjects([...projects, { name: "", description: "", liveUrl: "", technologies: [] }]);
   const updateProject = (index, field, value) => {
     const newProj = [...projects];
     newProj[index][field] = value;
@@ -404,7 +438,7 @@ export function ProjectsModal({ profile, isOpen, onClose }) {
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Project Link</label>
-                  <Input value={proj.link} onChange={e => updateProject(index, "link", e.target.value)} placeholder="e.g. https://github.com/my-project" />
+                  <Input value={proj.liveUrl || proj.link} onChange={e => updateProject(index, "liveUrl", e.target.value)} placeholder="e.g. https://github.com/my-project" />
                 </div>
                 <div className="space-y-2">
                   <label className="text-sm font-medium">Description</label>
@@ -424,6 +458,195 @@ export function ProjectsModal({ profile, isOpen, onClose }) {
           <DialogFooter>
             <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
             <Button onClick={handleSubmit} disabled={updateProjects.isPending}>Save changes</Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+import { useUpdateSummary, useUpdateLanguages, useUpdateAccomplishments } from "@/hooks/useProfile";
+
+export function SummaryModal({ profile, isOpen, onClose }) {
+  const [summary, setSummary] = useState("");
+  const updateSummary = useUpdateSummary();
+
+  useEffect(() => {
+    if (profile?.summary) {
+      setSummary(profile.summary);
+    }
+  }, [profile, isOpen]);
+
+  const handleSubmit = async (e) => {
+    e.preventDefault();
+    try {
+      await updateSummary.mutateAsync(summary);
+      onClose();
+    } catch (err) {}
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px]">
+        <DialogHeader>
+          <DialogTitle>Profile Summary</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4 pt-4">
+          <div className="space-y-2">
+            <label className="text-sm font-medium">Summary</label>
+            <textarea 
+              className="flex min-h-[150px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+              value={summary} 
+              onChange={e => setSummary(e.target.value)} 
+              placeholder="Your Profile Summary should mention the highlights of your career..." 
+            />
+          </div>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button type="submit" disabled={updateSummary.isPending}>Save changes</Button>
+          </DialogFooter>
+        </form>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function LanguagesModal({ profile, isOpen, onClose }) {
+  const [languages, setLanguages] = useState([]);
+  const updateLanguages = useUpdateLanguages();
+
+  useEffect(() => {
+    if (profile?.languages) {
+      setLanguages(profile.languages);
+    }
+  }, [profile, isOpen]);
+
+  const addLang = () => setLanguages([...languages, { language: "", proficiency: "Professional" }]);
+  const updateLang = (index, field, value) => {
+    const newLang = [...languages];
+    newLang[index][field] = value;
+    setLanguages(newLang);
+  };
+  const removeLang = (index) => setLanguages(languages.filter((_, i) => i !== index));
+
+  const handleSubmit = async () => {
+    try {
+      await updateLanguages.mutateAsync(languages);
+      onClose();
+    } catch (err) {}
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[500px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Languages</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 pt-4">
+          {languages.map((lang, index) => (
+            <div key={index} className="flex items-start gap-4 p-4 border border-border rounded-xl relative">
+              <div className="flex-1 space-y-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Language</label>
+                  <Input value={lang.language} onChange={e => updateLang(index, "language", e.target.value)} placeholder="e.g. English" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Proficiency</label>
+                  <select 
+                    className="flex h-10 w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={lang.proficiency}
+                    onChange={e => updateLang(index, "proficiency", e.target.value)}
+                  >
+                    <option value="Native">Native</option>
+                    <option value="Fluent">Fluent</option>
+                    <option value="Professional">Professional</option>
+                    <option value="Conversational">Conversational</option>
+                    <option value="Basic">Basic</option>
+                  </select>
+                </div>
+              </div>
+              <button onClick={() => removeLang(index)} className="text-muted-foreground hover:text-destructive mt-8">
+                <X className="w-4 h-4" />
+              </button>
+            </div>
+          ))}
+          <Button type="button" variant="outline" onClick={addLang} className="w-full">
+            + Add Language
+          </Button>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={updateLanguages.isPending}>Save changes</Button>
+          </DialogFooter>
+        </div>
+      </DialogContent>
+    </Dialog>
+  );
+}
+
+export function AccomplishmentsModal({ profile, isOpen, onClose }) {
+  const [achievements, setAchievements] = useState([]);
+  const updateAccomplishments = useUpdateAccomplishments();
+
+  useEffect(() => {
+    if (profile?.achievements) {
+      setAchievements(profile.achievements);
+    }
+  }, [profile, isOpen]);
+
+  const addAchieve = () => setAchievements([...achievements, { title: "", description: "", date: "" }]);
+  const updateAchieve = (index, field, value) => {
+    const newAchieve = [...achievements];
+    newAchieve[index][field] = value;
+    setAchievements(newAchieve);
+  };
+  const removeAchieve = (index) => setAchievements(achievements.filter((_, i) => i !== index));
+
+  const handleSubmit = async () => {
+    try {
+      await updateAccomplishments.mutateAsync(achievements);
+      onClose();
+    } catch (err) {}
+  };
+
+  return (
+    <Dialog open={isOpen} onOpenChange={onClose}>
+      <DialogContent className="sm:max-w-[600px] max-h-[80vh] overflow-y-auto">
+        <DialogHeader>
+          <DialogTitle>Accomplishments</DialogTitle>
+        </DialogHeader>
+        <div className="space-y-6 pt-4">
+          {achievements.map((achieve, index) => (
+            <div key={index} className="p-4 border border-border rounded-xl space-y-4 relative">
+              <button onClick={() => removeAchieve(index)} className="absolute top-4 right-4 text-muted-foreground hover:text-destructive">
+                <X className="w-4 h-4" />
+              </button>
+              <div className="grid grid-cols-1 gap-4">
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Title</label>
+                  <Input value={achieve.title} onChange={e => updateAchieve(index, "title", e.target.value)} placeholder="e.g. Employee of the Month" />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Date (Optional)</label>
+                  <Input type="date" value={achieve.date ? new Date(achieve.date).toISOString().split('T')[0] : ""} onChange={e => updateAchieve(index, "date", e.target.value)} />
+                </div>
+                <div className="space-y-2">
+                  <label className="text-sm font-medium">Description</label>
+                  <textarea 
+                    className="flex min-h-[80px] w-full rounded-md border border-input bg-background px-3 py-2 text-sm"
+                    value={achieve.description} 
+                    onChange={e => updateAchieve(index, "description", e.target.value)} 
+                    placeholder="Describe the accomplishment" 
+                  />
+                </div>
+              </div>
+            </div>
+          ))}
+          <Button type="button" variant="outline" onClick={addAchieve} className="w-full">
+            + Add Accomplishment
+          </Button>
+          <DialogFooter>
+            <Button type="button" variant="outline" onClick={onClose}>Cancel</Button>
+            <Button onClick={handleSubmit} disabled={updateAccomplishments.isPending}>Save changes</Button>
           </DialogFooter>
         </div>
       </DialogContent>

@@ -10,6 +10,7 @@ import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { useNavigate } from "react-router-dom";
 import { MatchAnalysis } from "@/components/analysis/MatchAnalysis";
+import { GlobalLoader } from "@/components/ui/GlobalLoader";
 
 export default function SavedJobs() {
   const [search, setSearch] = useState("");
@@ -56,10 +57,7 @@ export default function SavedJobs() {
           </div>
 
           {isLoading ? (
-            <div className="flex flex-col items-center justify-center py-20">
-              <Loader2 className="w-10 h-10 animate-spin text-primary mb-4" />
-              <p className="text-muted-foreground">Loading your saved jobs...</p>
-            </div>
+            <GlobalLoader message="Loading your saved jobs..." />
           ) : !savedJobs || savedJobs.length === 0 ? (
             <div className="bg-card border border-border rounded-2xl p-12 text-center shadow-sm">
               <div className="w-16 h-16 bg-primary/10 rounded-full flex items-center justify-center mx-auto mb-4">

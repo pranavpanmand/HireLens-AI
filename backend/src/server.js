@@ -6,6 +6,8 @@ Object.defineProperty(exports, "__esModule", { value: true });
 const db_1 = require("./config/db");
 const env_1 = require("./config/env");
 const app_1 = __importDefault(require("./app"));
+require("./services/cron.service");
+
 async function start() {
     try {
         await (0, db_1.connectDB)();

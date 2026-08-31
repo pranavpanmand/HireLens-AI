@@ -14,6 +14,7 @@ const recommendations_routes_1 = __importDefault(require("./recommendations.rout
 const profile_routes_1 = __importDefault(require("./profile.routes"));
 const ai_routes_1 = __importDefault(require("./ai.routes"));
 const applications_routes_1 = __importDefault(require("./applications.routes"));
+const alerts_routes_1 = __importDefault(require("./alerts.routes"));
 function registerRoutes(app) {
     app.use('/api/auth', auth_routes_1.default);
     app.use('/api/jobs', jobs_routes_1.default);
@@ -25,6 +26,7 @@ function registerRoutes(app) {
     app.use('/api/profile', profile_routes_1.default);
     app.use('/api/ai', ai_routes_1.default);
     app.use('/api/applications', applications_routes_1.default);
+    app.use('/api/alerts', alerts_routes_1.default);
     app.use('/api/analytics', require('./analytics.routes').default);
     // Health check
     app.get('/api/health', (_req, res) => {

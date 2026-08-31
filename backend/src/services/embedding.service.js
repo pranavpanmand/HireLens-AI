@@ -17,6 +17,30 @@ function getGenAI() {
 }
 
 /**
+ * Utility to execute a Gemini API call with automatic retries for rate limits (429)
+ */
+async function callWithRetry(apiCall, maxRetries = 5) {
+    let lastError;
+    for (let i = 0; i < maxRetries; i++) {
+        try {
+            return await apiCall();
+        } catch (error) {
+            lastError = error;
+            if (error.status === 429 || (error.message && error.message.includes('429'))) {
+                const jitter = Math.random() * 5000;
+                const delay = (Math.pow(2, i) * 10000) + jitter;
+                console.warn(`[Gemini API] Rate limit hit. Retrying in ${Math.round(delay/1000)}s... (Attempt ${i + 1}/${maxRetries})`);
+                await new Promise(resolve => setTimeout(resolve, delay));
+            } else {
+                throw error;
+            }
+        }
+    }
+    console.error("[Gemini API] Max retries reached.");
+    throw lastError;
+}
+
+/**
  * Generate a 768-dimensional embedding vector for text using Gemini text-embedding-004.
  * Truncates to 10,000 chars to stay within API limits.
  */
@@ -26,9 +50,9 @@ async function generateEmbedding(text) {
     }
     
     const truncated = text.substring(0, 10000);
-    const model = getGenAI().getGenerativeModel({ model: 'text-embedding-004' });
+    const model = getGenAI().getGenerativeModel({ model: 'gemini-embedding-2' });
     
-    const result = await model.embedContent(truncated);
+    const result = await callWithRetry(() => model.embedContent(truncated));
     return result.embedding.values;
 }
 

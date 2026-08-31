@@ -1,21 +1,21 @@
 const rateLimit = require('express-rate-limit');
 
-// General API rate limiter (100 requests per 15 minutes)
+// General API rate limiter (Increased to prevent blocking)
 const apiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000,
-    max: 100,
+    max: 5000,
     standardHeaders: true,
     legacyHeaders: false,
     message: { success: false, error: 'Too many requests, please try again later' },
 });
 
-// Stricter rate limiter for expensive AI endpoints (e.g. Gemini calls)
+// AI Rate limiter (Increased as requested by user to allow unlimited AI usage)
 const aiLimiter = rateLimit({
     windowMs: 15 * 60 * 1000, // 15 minutes
-    max: 5, // 5 AI calls per 15 mins per IP
+    max: 5000, // Effectively disabled
     standardHeaders: true,
     legacyHeaders: false,
-    message: { success: false, error: 'AI limit reached (5 requests per 15 minutes). Please try again later.' },
+    message: { success: false, error: 'AI limit reached. Please try again later.' },
 });
 
 module.exports = {

@@ -2,7 +2,7 @@ import { fetchApi } from './api';
 
 export const profileApi = {
   getProfile: () => fetchApi('/profile'),
-  updateBasicInfo: (data) => fetchApi('/profile/basic', { method: 'PUT', body: JSON.stringify(data) }),
+  updateBasicInfo: (data) => fetchApi('/profile/basic-info', { method: 'PUT', body: JSON.stringify(data) }),
   updatePreferences: (data) => fetchApi('/profile/preferences', { method: 'PUT', body: JSON.stringify(data) }),
   
   updateEducation: (education) => fetchApi('/profile/education', { method: 'PUT', body: JSON.stringify({ education }) }),
@@ -10,6 +10,9 @@ export const profileApi = {
   updateProjects: (projects) => fetchApi('/profile/projects', { method: 'PUT', body: JSON.stringify({ projects }) }),
 
   updateSkills: (skills) => fetchApi('/profile/skills', { method: 'PUT', body: JSON.stringify({ skills }) }),
+  updateSummary: (summary) => fetchApi('/profile/summary', { method: 'PUT', body: JSON.stringify({ summary }) }),
+  updateLanguages: (languages) => fetchApi('/profile/languages', { method: 'PUT', body: JSON.stringify({ languages }) }),
+  updateAccomplishments: (achievements) => fetchApi('/profile/achievements', { method: 'PUT', body: JSON.stringify({ achievements }) }),
 
   uploadPhoto: async (file) => {
     const formData = new FormData();

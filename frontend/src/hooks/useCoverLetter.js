@@ -8,7 +8,7 @@ export const useCoverLetter = () => {
         method: "POST",
         body: JSON.stringify({ jobId })
       });
-      return response.data;
+      return response;
     }
   });
 };

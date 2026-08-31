@@ -10,6 +10,8 @@ const errorHandler_1 = require("../middleware/errorHandler");
 const promises_1 = __importDefault(require("fs/promises"));
 const cloudinary_service_1 = require("../services/cloudinary.service");
 const embedding_service_1 = require("../services/embedding.service");
+const ai_service_1 = require("../services/ai.service");
+const StudentProfile_1 = require("../models/StudentProfile");
 const uploadResume = async (req, res, next) => {
     try {
         if (!req.file) {
@@ -25,9 +27,8 @@ const uploadResume = async (req, res, next) => {
         // Upload to Cloudinary
         const cloudinaryResult = await (0, cloudinary_service_1.uploadToCloudinary)(file.buffer, `resumes/${userId}`, 'raw');
         
-        // If this is the user's first resume, make it primary
-        const existingCount = await Resume_1.Resume.countDocuments({ userId });
-        const isPrimary = existingCount === 0;
+        // Unset primary flag on existing resumes
+        await Resume_1.Resume.updateMany({ userId }, { $set: { isPrimary: false } });
         
         const resume = await Resume_1.Resume.create({
             userId,
@@ -39,7 +40,7 @@ const uploadResume = async (req, res, next) => {
             publicId: cloudinaryResult.public_id,
             parsedText,
             skillsExtracted: skills,
-            isPrimary,
+            isPrimary: true,
         });
         
         // Generate embedding in background (don't block the response)
@@ -50,6 +51,43 @@ const uploadResume = async (req, res, next) => {
             }).catch(err => {
                 console.warn(`[Resume] Embedding failed for ${resume._id}:`, err.message);
             });
+        }
+        
+        // Auto-fill StudentProfile from resume
+        if (parsedText) {
+            try {
+                const extractedData = await (0, ai_service_1.extractProfileFromResume)(parsedText);
+                const profile = await StudentProfile_1.StudentProfile.findOne({ userId });
+                if (profile) {
+                    let updated = false;
+                    if ((!profile.education || profile.education.length === 0) && extractedData.education.length > 0) {
+                        profile.education = extractedData.education;
+                        updated = true;
+                    }
+                    if ((!profile.experience || profile.experience.length === 0) && extractedData.experience.length > 0) {
+                        profile.experience = extractedData.experience;
+                        updated = true;
+                    }
+                    if ((!profile.projects || profile.projects.length === 0) && extractedData.projects.length > 0) {
+                        profile.projects = extractedData.projects;
+                        updated = true;
+                    }
+                    if ((!profile.skills || profile.skills.length === 0) && extractedData.skills.length > 0) {
+                        profile.skills = extractedData.skills;
+                        updated = true;
+                    }
+                    if ((!profile.languages || profile.languages.length === 0) && extractedData.languages.length > 0) {
+                        profile.languages = extractedData.languages;
+                        updated = true;
+                    }
+                    if (updated) {
+                        await profile.save();
+                        console.log(`[Resume] Auto-filled profile for user ${userId}`);
+                    }
+                }
+            } catch (err) {
+                console.error('[Resume] Auto-fill failed:', err);
+            }
         }
         
         res.status(201).json({ success: true, data: resume });

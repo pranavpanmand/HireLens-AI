@@ -149,6 +149,26 @@ const Login = () => {
 
       {/* Right Side - Decorative */}
       <div className="hidden lg:flex flex-1 bg-gradient-hero items-center justify-center p-8 relative overflow-hidden">
+        {/* Animated Background Orbs */}
+        <motion.div
+          animate={{
+            scale: [1, 1.2, 1],
+            x: [0, 50, 0],
+            y: [0, -30, 0],
+          }}
+          transition={{ duration: 8, repeat: Infinity, ease: "easeInOut" }}
+          className="absolute top-1/4 left-1/4 w-64 h-64 bg-primary/30 rounded-full blur-[80px]"
+        />
+        <motion.div
+          animate={{
+            scale: [1, 1.5, 1],
+            x: [0, -40, 0],
+            y: [0, 60, 0],
+          }}
+          transition={{ duration: 10, repeat: Infinity, ease: "easeInOut", delay: 1 }}
+          className="absolute bottom-1/4 right-1/4 w-80 h-80 bg-secondary/20 rounded-full blur-[100px]"
+        />
+        
         <div className="absolute inset-0 opacity-10">
           <div
             className="absolute inset-0"
@@ -156,19 +176,21 @@ const Login = () => {
               backgroundImage: `radial-gradient(circle at 2px 2px, rgba(255,255,255,0.15) 1px, transparent 0)`,
               backgroundSize: '40px 40px'
             }} />
-          
         </div>
         
         <motion.div
-          initial={{ opacity: 0, scale: 0.9 }}
-          animate={{ opacity: 1, scale: 1 }}
-          transition={{ delay: 0.2 }}
-          className="relative z-10 text-center max-w-md">
+          initial={{ opacity: 0, scale: 0.9, y: 20 }}
+          animate={{ opacity: 1, scale: 1, y: 0 }}
+          transition={{ delay: 0.3, duration: 0.5 }}
+          className="relative z-10 text-center max-w-md backdrop-blur-sm bg-black/10 p-8 rounded-3xl border border-white/10 shadow-2xl">
           
-          <h2 className="font-display text-4xl font-bold text-primary-foreground mb-4">
+          <div className="w-16 h-16 rounded-2xl bg-white/10 flex items-center justify-center mx-auto mb-6 backdrop-blur-md border border-white/20">
+            <Briefcase className="w-8 h-8 text-white" />
+          </div>
+          <h2 className="font-display text-4xl font-bold text-white mb-4">
             Land Your Dream Job
           </h2>
-          <p className="text-primary-foreground/70">
+          <p className="text-white/80 leading-relaxed">
             AI-powered job matching that analyzes your skills and finds the perfect opportunities for your career.
           </p>
         </motion.div>

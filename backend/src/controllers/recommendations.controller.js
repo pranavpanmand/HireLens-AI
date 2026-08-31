@@ -70,15 +70,20 @@ const getRecommendations = async (req, res, next) => {
             };
         });
 
-        // Generate reasons for top 5 jobs in parallel
+        // Generate reasons for top 5 jobs in parallel (with error handling for API limits)
         if (resume.parsedText) {
             const top5 = topJobs.slice(0, 5);
             await Promise.all(top5.map(async (job) => {
-                job.matchReason = await (0, ai_service_1.generateMatchReason)(
-                    resume.parsedText,
-                    job.title,
-                    (job.skills || []).join(', ')
-                );
+                try {
+                    job.matchReason = await (0, ai_service_1.generateMatchReason)(
+                        resume.parsedText,
+                        job.title,
+                        (job.skills || []).join(', ')
+                    );
+                } catch (apiError) {
+                    console.warn(`[Recommendations] AI reason generation failed for job ${job.title}:`, apiError.message);
+                    job.matchReason = "Your profile skills align well with the requirements for this role.";
+                }
             }));
         }
 

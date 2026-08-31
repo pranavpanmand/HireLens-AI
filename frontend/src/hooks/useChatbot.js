@@ -7,10 +7,14 @@ export const useChatbot = () => {
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
 
-  const sendMessage = async (messageText) => {
-    if (!messageText.trim()) return;
+  const sendMessage = async (messageText, fileData = null) => {
+    if (!messageText.trim() && !fileData) return;
 
-    const newMessage = { role: 'user', content: messageText };
+    const newMessage = { 
+      role: 'user', 
+      content: messageText,
+      ...(fileData && { attachment: fileData.name || 'Attachment' })
+    };
     const currentHistory = [...messages];
     
     // Add user message to UI immediately
@@ -26,7 +30,13 @@ export const useChatbot = () => {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
         body: JSON.stringify({
-          message: messageText,
+          message: messageText || "Analyze this file.",
+          file: fileData ? {
+            inlineData: {
+              data: fileData.base64,
+              mimeType: fileData.type
+            }
+          } : undefined,
           // Exclude the initial greeting from the history sent to the model to save tokens and avoid confusion
           // and only keep the last few interactions if history gets too long.
           conversationHistory: currentHistory.slice(1).map(m => ({

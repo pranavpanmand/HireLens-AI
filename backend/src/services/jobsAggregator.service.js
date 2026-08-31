@@ -3,6 +3,7 @@
 const { fetchAdzunaJobs } = require('./adzuna.service');
 const { fetchArbeitnowJobs } = require('./arbeitnow.service');
 const { fetchRemotiveJobs } = require('./remotive.service');
+const { fetchJSearchJobs } = require('./jsearch.service');
 const { ApiCall } = require('../models/ApiCall');
 const { JobPosting } = require('../models/JobPosting');
 
@@ -26,6 +27,9 @@ async function aggregateJobs({ search = '', location = '', source = '', page = 1
     }
     if (!source || source.toLowerCase() === 'all' || source.toLowerCase() === 'remotive') {
         providers.push({ name: 'Remotive', fetcher: fetchRemotiveJobs });
+    }
+    if (!source || source.toLowerCase() === 'all' || source.toLowerCase() === 'jsearch') {
+        providers.push({ name: 'JSearch', fetcher: fetchJSearchJobs });
     }
 
     const promises = providers.map(async p => {
@@ -91,6 +95,15 @@ async function aggregateJobs({ search = '', location = '', source = '', page = 1
     // We do NOT return the in-memory deduplicated list directly anymore!
     // We return nothing, because jobs.controller will now fetch from DB using proper skip/limit pagination.
     jobCache.set(cacheKey, true);
+
+    // Asynchronously trigger embedding for any newly added jobs without blocking
+    if (deduplicated.length > 0) {
+        setImmediate(() => {
+            const fetch = require('node-fetch') || global.fetch;
+            fetch('http://localhost:5000/api/recommendations/embed-jobs', { method: 'POST' })
+                .catch(err => console.error('[Aggregator] Failed to trigger background embedding:', err.message));
+        });
+    }
 }
 
 module.exports = { aggregateJobs };

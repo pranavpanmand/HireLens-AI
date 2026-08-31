@@ -18,83 +18,108 @@ import { ChatbotWidget } from "./components/ai/ChatbotWidget";
 import Login from "./pages/Login";
 import Register from "./pages/Register";
 import RecruiterDashboard from "./pages/RecruiterDashboard";
+import ForgotPassword from "./pages/ForgotPassword";
+import ResetPassword from "./pages/ResetPassword";
+import Unsubscribe from "./pages/Unsubscribe";
 import NotFound from "./pages/NotFound";
+
+import { useLocation } from "react-router-dom";
+import { AnimatePresence } from "framer-motion";
+import { PageTransition } from "@/components/layout/PageTransition";
+import { AnimatedBackground } from "@/components/layout/AnimatedBackground";
+import { CustomCursor } from "@/components/ui/CustomCursor";
+
+const AnimatedRoutes = () => {
+  const location = useLocation();
+  return (
+    <AnimatePresence mode="wait">
+      <Routes location={location} key={location.pathname}>
+        <Route path="/" element={<PageTransition><Index /></PageTransition>} />
+        <Route path="/jobs" element={<PageTransition><Jobs /></PageTransition>} />
+        <Route path="/jobs/:id" element={<PageTransition><JobDetails /></PageTransition>} />
+        <Route
+          path="/dashboard"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <PageTransition><Dashboard /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/profile"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <PageTransition><Profile /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/resume-analyzer"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <PageTransition><ResumeAnalyzer /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/saved-jobs"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <PageTransition><SavedJobs /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/applications"
+          element={
+            <ProtectedRoute requiredRole="student">
+              <PageTransition><MyApplications /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter"
+          element={
+            <ProtectedRoute requiredRole="recruiter">
+              <PageTransition><RecruiterDashboard /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route
+          path="/recruiter/jobs/:id/applicants"
+          element={
+            <ProtectedRoute requiredRole="recruiter">
+              <PageTransition><JobApplicants /></PageTransition>
+            </ProtectedRoute>
+          }
+        />
+        <Route path="/login" element={<PageTransition><Login /></PageTransition>} />
+        <Route path="/register" element={<PageTransition><Register /></PageTransition>} />
+        <Route path="/forgot-password" element={<PageTransition><ForgotPassword /></PageTransition>} />
+        <Route path="/reset-password/:token" element={<PageTransition><ResetPassword /></PageTransition>} />
+        <Route path="/unsubscribe/:token" element={<PageTransition><Unsubscribe /></PageTransition>} />
+        <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
+      </Routes>
+    </AnimatePresence>
+  );
+};
 
 const queryClient = new QueryClient();
 
-const App = () =>
-<QueryClientProvider client={queryClient}>
+const App = () => (
+  <QueryClientProvider client={queryClient}>
     <AuthProvider>
       <TooltipProvider>
         <Toaster />
         <Sonner />
         <BrowserRouter>
-          <Routes>
-            <Route path="/" element={<Index />} />
-            <Route path="/jobs" element={<Jobs />} />
-            <Route path="/jobs/:id" element={<JobDetails />} />
-            <Route
-            path="/dashboard"
-            element={
-            <ProtectedRoute requiredRole="student">
-                  <Dashboard />
-                </ProtectedRoute>
-            } />
-            <Route
-            path="/profile"
-            element={
-            <ProtectedRoute requiredRole="student">
-                  <Profile />
-                </ProtectedRoute>
-            } />
-            <Route
-            path="/resume-analyzer"
-            element={
-            <ProtectedRoute requiredRole="student">
-                  <ResumeAnalyzer />
-                </ProtectedRoute>
-            } />
-          
-            <Route
-            path="/saved-jobs"
-            element={
-            <ProtectedRoute requiredRole="student">
-                  <SavedJobs />
-                </ProtectedRoute>
-            } />
-            <Route
-            path="/applications"
-            element={
-            <ProtectedRoute requiredRole="student">
-                  <MyApplications />
-                </ProtectedRoute>
-            } />
-
-            <Route
-            path="/recruiter"
-            element={
-            <ProtectedRoute requiredRole="recruiter">
-                  <RecruiterDashboard />
-                </ProtectedRoute>
-            } />
-            <Route
-            path="/recruiter/jobs/:id/applicants"
-            element={
-            <ProtectedRoute requiredRole="recruiter">
-                  <JobApplicants />
-                </ProtectedRoute>
-            } />
-          
-            <Route path="/login" element={<Login />} />
-            <Route path="/register" element={<Register />} />
-            {/* ADD ALL CUSTOM ROUTES ABOVE THE CATCH-ALL "*" ROUTE */}
-            <Route path="*" element={<NotFound />} />
-          </Routes>
+          <AnimatedBackground />
+          <AnimatedRoutes />
           <ChatbotWidget />
         </BrowserRouter>
       </TooltipProvider>
     </AuthProvider>
-  </QueryClientProvider>;
-
+  </QueryClientProvider>
+);
 
 export default App;

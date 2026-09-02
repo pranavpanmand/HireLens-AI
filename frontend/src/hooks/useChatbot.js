@@ -2,7 +2,7 @@ import { useState } from "react";
 
 export const useChatbot = () => {
   const [messages, setMessages] = useState([
-    { role: 'assistant', content: 'Hi there! I am your AI Career Advisor. How can I help you today?' }
+    { role: 'assistant', content: 'Hi! How can I help with your job search today?' }
   ]);
   const [isLoading, setIsLoading] = useState(false);
   const [error, setError] = useState(null);
@@ -37,9 +37,7 @@ export const useChatbot = () => {
               mimeType: fileData.type
             }
           } : undefined,
-          // Exclude the initial greeting from the history sent to the model to save tokens and avoid confusion
-          // and only keep the last few interactions if history gets too long.
-          conversationHistory: currentHistory.slice(1).map(m => ({
+          conversationHistory: currentHistory.slice(1).filter(m => !m.type).map(m => ({
             role: m.role === 'assistant' ? 'model' : 'user',
             content: m.content
           }))
@@ -55,16 +53,22 @@ export const useChatbot = () => {
       setMessages(prev => [...prev, { role: 'assistant', content: data.data.response }]);
     } catch (err) {
       setError(err.message);
-      // Optional: remove the user message if it failed, or show error state
     } finally {
       setIsLoading(false);
     }
   };
 
+  const addMessage = (message) => {
+    setMessages(prev => [...prev, message]);
+  };
+
   return {
     messages,
+    setMessages,
+    addMessage,
     sendMessage,
     isLoading,
+    setIsLoading,
     error
   };
 };

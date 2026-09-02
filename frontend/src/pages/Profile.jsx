@@ -216,23 +216,23 @@ export default function Profile() {
             {/* Quick Links Sidebar */}
             <Reveal delay={0.2} width="100%" className="md:w-64 shrink-0">
               <div className="w-full bg-card rounded-2xl shadow-sm border border-border sticky top-24 overflow-hidden">
-                <div className="p-4 border-b border-border bg-muted/20">
+                <div className="p-4 border-b border-border bg-muted/20 hidden md:block">
                   <h3 className="font-bold text-foreground">Quick links</h3>
                 </div>
-              <nav className="py-2">
-                {SECTIONS.map(section => (
-                  <a
-                    key={section.id}
-                    href={`#${section.id}`}
-                    onClick={(e) => handleScrollToSection(e, section.id)}
-                    className="flex items-center justify-between px-6 py-3 text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors group"
-                  >
-                    {section.label}
-                    <span className="text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">Add</span>
-                  </a>
-                ))}
-              </nav>
-            </div>
+                <nav className="py-2 flex flex-row overflow-x-auto hide-scrollbar md:flex-col p-2 md:p-0">
+                  {SECTIONS.map(section => (
+                    <a
+                      key={section.id}
+                      href={`#${section.id}`}
+                      onClick={(e) => handleScrollToSection(e, section.id)}
+                      className="flex-shrink-0 flex items-center justify-between px-4 py-2 md:px-6 md:py-3 text-sm text-muted-foreground hover:text-primary hover:bg-primary/5 transition-colors group rounded-full md:rounded-none border border-border md:border-none mr-2 md:mr-0"
+                    >
+                      {section.label}
+                      <span className="hidden md:inline text-primary font-medium opacity-0 group-hover:opacity-100 transition-opacity">Add</span>
+                    </a>
+                  ))}
+                </nav>
+              </div>
             </Reveal>
 
             {/* Main Content Area */}

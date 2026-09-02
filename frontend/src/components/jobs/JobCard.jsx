@@ -56,29 +56,29 @@ export const JobCard = ({ job, onAnalyze, index = 0 }) => {
       transition={{ delay: index * 0.1, duration: 0.4 }}
     >
       <TiltCard>
-        <SpotlightCard className="group p-6">
-          <div className="flex items-start gap-4 relative z-10">
-            {/* Company Logo */}
-            <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-soft">
-              {job.logo ?
-              <img src={job.logo} alt={job.company} className="w-8 h-8 object-contain" /> :
+        <SpotlightCard className="group p-6 h-full flex flex-col">
+          <div className="flex flex-col gap-4 relative z-10 h-full">
+            <div className="flex items-start justify-between gap-3 w-full">
+              {/* Company Logo */}
+              <div className="w-14 h-14 rounded-xl bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-soft">
+                {job.logo ? (
+                  <img src={job.logo} alt={job.company} className="w-8 h-8 object-contain" />
+                ) : (
+                  <Building2 className="w-7 h-7 text-primary-foreground" />
+                )}
+              </div>
 
-              <Building2 className="w-7 h-7 text-primary-foreground" />
-              }
-            </div>
+              {/* Title & Save */}
+              <div className="flex-1 min-w-0 pr-2">
+                <Link to={`/jobs/${job.id || job._id}`}>
+                  <h3 className="font-display font-semibold text-lg text-foreground hover:text-primary transition-colors line-clamp-2">
+                    {job.title}
+                  </h3>
+                </Link>
+                <p className="text-muted-foreground text-sm truncate">{job.company}</p>
+              </div>
 
-            {/* Job Info */}
-            <div className="flex-1 min-w-0">
-              <div className="flex items-start justify-between gap-2">
-                <div>
-                  <Link to={`/jobs/${job.id || job._id}`}>
-                    <h3 className="font-display font-semibold text-lg text-foreground hover:text-primary transition-colors line-clamp-1">
-                      {job.title}
-                    </h3>
-                  </Link>
-                  <p className="text-muted-foreground text-sm">{job.company}</p>
-                </div>
-                <button onClick={handleSaveClick} className="p-2 rounded-lg hover:bg-muted/50 backdrop-blur-sm transition-colors flex-shrink-0 relative z-[20]">
+              <button onClick={handleSaveClick} className="p-2 -mr-2 -mt-2 rounded-lg hover:bg-muted/50 backdrop-blur-sm transition-colors flex-shrink-0 relative z-[20]">
                   <motion.div
                     whileTap={{ scale: 0.8 }}
                     animate={{ scale: isSaved ? [1, 1.2, 1] : 1 }}
@@ -89,11 +89,19 @@ export const JobCard = ({ job, onAnalyze, index = 0 }) => {
                 </button>
               </div>
 
+            {/* Job Info Details */}
+            <div className="flex-1 flex flex-col min-w-0 mt-2">
+
               {/* Meta Info */}
               <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
                 {job.source && (
                   <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
                     {job.source}
+                  </Badge>
+                )}
+                {job.match_score >= 80 && (
+                  <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-transparent font-bold">
+                    ✨ Great Match — Apply Now
                   </Badge>
                 )}
                 <span className="flex items-center gap-1.5">
@@ -130,22 +138,26 @@ export const JobCard = ({ job, onAnalyze, index = 0 }) => {
               </p>
 
               {/* Actions */}
-              <div className="flex flex-wrap items-center gap-3 mt-4 relative z-[30] pointer-events-auto">
+              <div className="flex flex-wrap items-center gap-2 mt-auto pt-4 relative z-[30] pointer-events-auto">
                 <Button
                   onClick={(e) => {
                     e.preventDefault();
                     e.stopPropagation();
                     onAnalyze(job);
                   }}
-                  className="bg-gradient-primary hover:opacity-90 transition-opacity">
-                  Analyze Match
+                  className="w-full sm:flex-1 min-h-[44px] bg-gradient-primary hover:opacity-90 transition-opacity whitespace-nowrap">
+                  Analyze
                 </Button>
-                <Button variant="outline" className="bg-background/50 backdrop-blur-sm hover:bg-background/80" asChild>
-                  <Link to={`/jobs/${job.id || job._id}`} onClick={(e) => e.stopPropagation()}>View Details →</Link>
+                <Button variant="outline" className="w-full sm:flex-1 min-h-[44px] bg-background/50 backdrop-blur-sm hover:bg-background/80" asChild>
+                  <Link to={`/jobs/${job.id || job._id}`} onClick={(e) => e.stopPropagation()}>View →</Link>
                 </Button>
                 {job.applyUrl && (
-                  <Button variant="ghost" className="hover:bg-muted/50 backdrop-blur-sm" asChild>
-                    <a href={job.applyUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center gap-2">
+                  <Button 
+                    variant={job.match_score >= 80 ? "default" : "ghost"} 
+                    className={`w-full min-h-[44px] ${job.match_score >= 80 ? "bg-amber-500 hover:bg-amber-600 text-white font-bold shadow-md transform hover:scale-[1.02] transition-all" : "hover:bg-muted/50 backdrop-blur-sm border border-border"}`}
+                    asChild
+                  >
+                    <a href={job.applyUrl} target="_blank" rel="noopener noreferrer" onClick={(e) => e.stopPropagation()} className="flex items-center justify-center gap-2">
                       Apply Now
                       <ExternalLink className="w-4 h-4" />
                     </a>

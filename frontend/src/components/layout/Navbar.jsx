@@ -178,62 +178,99 @@ export const Navbar = () => {
             </button>
           </div>
         </div>
-      </div>
+        </div>
+      </motion.nav>
 
-      {/* Mobile Menu */}
+      {/* Mobile Menu Overlay */}
       <AnimatePresence>
-        {isOpen &&
-        <motion.div
-          initial={{ opacity: 0, height: 0 }}
-          animate={{ opacity: 1, height: "auto" }}
-          exit={{ opacity: 0, height: 0 }}
-          className="md:hidden bg-background border-b border-border overflow-hidden">
-          
-            <div className="container mx-auto px-4 py-4 flex flex-col gap-4">
-              {navLinks.map((link) =>
-            <Link
-              key={link.href}
-              to={link.href}
-              onClick={() => setIsOpen(false)}
-              className={`text-sm font-medium py-2 ${
-              isActive(link.href) ?
-              "text-primary" :
-              "text-muted-foreground"}`
-              }>
-              
+        {isOpen && (
+          <motion.div
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            exit={{ opacity: 0 }}
+            className="fixed inset-0 z-40 bg-background/80 backdrop-blur-sm md:hidden pointer-events-auto"
+            onClick={() => setIsOpen(false)}
+          />
+        )}
+      </AnimatePresence>
+
+      {/* Mobile Menu Panel */}
+      <AnimatePresence>
+        {isOpen && (
+          <motion.div
+            initial={{ x: "100%" }}
+            animate={{ x: 0 }}
+            exit={{ x: "100%" }}
+            transition={{ type: "spring", bounce: 0, duration: 0.4 }}
+            className="fixed top-0 right-0 bottom-0 w-full max-w-sm z-50 bg-background border-l border-border shadow-2xl flex flex-col md:hidden pointer-events-auto"
+          >
+            <div className="flex items-center justify-between p-6 border-b border-border">
+              <span className="font-display font-bold text-lg text-foreground">
+                Menu
+              </span>
+              <button
+                className="p-2 -mr-2 rounded-lg hover:bg-muted transition-colors"
+                onClick={() => setIsOpen(false)}
+              >
+                <X className="w-6 h-6" />
+              </button>
+            </div>
+            
+            <div className="flex-1 overflow-y-auto px-6 py-8 flex flex-col gap-6">
+              {navLinks.map((link) => (
+                <Link
+                  key={link.href}
+                  to={link.href}
+                  onClick={() => setIsOpen(false)}
+                  className={`text-lg font-medium py-2 ${
+                    isActive(link.href) ? "text-primary" : "text-muted-foreground hover:text-foreground"
+                  }`}
+                >
                   {link.label}
                 </Link>
-            )}
-            {user && hasRole("student") && (
-              <Link to="/saved-jobs" onClick={() => setIsOpen(false)} className="text-sm font-medium text-muted-foreground py-2">
-                Saved Jobs
-              </Link>
-            )}
-              <div className="flex flex-col gap-2 pt-4 border-t border-border">
-                {user ?
-              <>
-                    <p className="text-sm text-muted-foreground py-2">{user.email}</p>
-                    <Button variant="outline" onClick={handleSignOut}>
-                      <LogOut className="w-4 h-4 mr-2" />
-                      Sign Out
-                    </Button>
-                  </> :
+              ))}
+              {user && hasRole("student") && (
+                <Link to="/saved-jobs" onClick={() => setIsOpen(false)} className="text-lg font-medium text-muted-foreground hover:text-foreground py-2">
+                  Saved Jobs
+                </Link>
+              )}
+            </div>
 
-              <>
-                    <Button variant="outline" asChild>
-                      <Link to="/login">Sign In</Link>
-                    </Button>
-                    <Button className="bg-gradient-primary" asChild>
-                      <Link to="/register">Get Started</Link>
-                    </Button>
-                  </>
-              }
-              </div>
+            <div className="p-6 border-t border-border bg-muted/30">
+              {user ? (
+                <div className="flex flex-col gap-4">
+                  <div className="flex items-center gap-3 mb-2">
+                    <div className="w-10 h-10 rounded-full bg-primary text-primary-foreground flex items-center justify-center font-bold text-sm">
+                      {profile?.profilePhotoUrl ? (
+                        <img src={profile.profilePhotoUrl} alt="Profile" className="w-full h-full rounded-full object-cover" />
+                      ) : (
+                        user.fullName?.charAt(0) || user.email.charAt(0).toUpperCase()
+                      )}
+                    </div>
+                    <div>
+                      <p className="font-medium text-foreground">{user.fullName || "User"}</p>
+                      <p className="text-sm text-muted-foreground">{user.email}</p>
+                    </div>
+                  </div>
+                  <Button variant="outline" className="w-full min-h-[44px]" onClick={handleSignOut}>
+                    <LogOut className="w-4 h-4 mr-2" />
+                    Sign Out
+                  </Button>
+                </div>
+              ) : (
+                <div className="flex flex-col gap-3">
+                  <Button variant="outline" className="w-full min-h-[44px]" asChild>
+                    <Link to="/login" onClick={() => setIsOpen(false)}>Sign In</Link>
+                  </Button>
+                  <Button className="w-full min-h-[44px] bg-gradient-primary" asChild>
+                    <Link to="/register" onClick={() => setIsOpen(false)}>Get Started</Link>
+                  </Button>
+                </div>
+              )}
             </div>
           </motion.div>
-        }
+        )}
       </AnimatePresence>
-    </motion.nav>
     </div>
   );
 };

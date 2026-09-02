@@ -49,8 +49,12 @@ const getJobs = async (req, res, next) => {
         const sort = req.query.sort || 'recent';
 
         // Dynamically fetch and upsert to MongoDB first, to keep DB fresh
-        await aggregateJobs({ search, location, source, page, limit }).catch(err => {
-            console.warn('[JobsController] aggregateJobs failed (non-blocking):', err.message);
+        // Wrapped in a 5-second timeout so it doesn't block the request if external APIs hang
+        await Promise.race([
+            aggregateJobs({ search, location, source, page, limit }),
+            new Promise((_, reject) => setTimeout(() => reject(new Error('External APIs timeout')), 5000))
+        ]).catch(err => {
+            console.warn('[JobsController] aggregateJobs failed or timed out (non-blocking):', err.message);
         });
 
         // Build MongoDB filter

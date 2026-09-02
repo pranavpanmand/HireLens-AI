@@ -20,6 +20,10 @@ const jobAlertSchema = new mongoose.Schema({
     lastSentAt: {
         type: Date
     },
+    lastStrongMatchAlertSentAt: {
+        type: Date,
+        default: null
+    },
     unsubscribeToken: {
         type: String
     }

@@ -63,9 +63,9 @@ export const Footer = () => {
           <div className="md:col-span-4 lg:col-span-2">
             <h4 className="font-display font-bold text-foreground mb-6">Company</h4>
             <ul className="space-y-4 text-sm text-muted-foreground">
-              <li><Link to="/" className="hover:text-primary transition-colors flex items-center gap-2 group"><span className="w-0 h-[1px] bg-primary group-hover:w-3 transition-all duration-300"></span>About Us</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors flex items-center gap-2 group"><span className="w-0 h-[1px] bg-primary group-hover:w-3 transition-all duration-300"></span>Contact</Link></li>
-              <li><Link to="/" className="hover:text-primary transition-colors flex items-center gap-2 group"><span className="w-0 h-[1px] bg-primary group-hover:w-3 transition-all duration-300"></span>Privacy Policy</Link></li>
+              <li><Link to="/about" className="hover:text-primary transition-colors flex items-center gap-2 group"><span className="w-0 h-[1px] bg-primary group-hover:w-3 transition-all duration-300"></span>About Us</Link></li>
+              <li><Link to="/contact" className="hover:text-primary transition-colors flex items-center gap-2 group"><span className="w-0 h-[1px] bg-primary group-hover:w-3 transition-all duration-300"></span>Contact</Link></li>
+              <li><Link to="/privacy" className="hover:text-primary transition-colors flex items-center gap-2 group"><span className="w-0 h-[1px] bg-primary group-hover:w-3 transition-all duration-300"></span>Privacy Policy</Link></li>
             </ul>
           </div>
         </div>
@@ -73,7 +73,7 @@ export const Footer = () => {
         {/* Bottom Bar */}
         <div className="pt-8 border-t border-border flex flex-col md:flex-row items-center justify-between gap-6">
           <p className="text-sm text-muted-foreground flex items-center gap-1">
-            © {new Date().getFullYear()} JobMatchAI. Made with <Heart className="w-4 h-4 text-red-500 mx-1" fill="currentColor" /> by our team.
+            © {new Date().getFullYear()} HireLens. Developed by <a href="https://pranav-panmand-portfolio.netlify.app/" target="_blank" rel="noreferrer" className="text-primary hover:underline font-medium">Pranav Panmand</a>.
           </p>
           
           <div className="flex items-center gap-4">

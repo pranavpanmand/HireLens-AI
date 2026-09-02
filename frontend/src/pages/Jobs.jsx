@@ -273,18 +273,18 @@ const Jobs = () => {
 
           {/* Job Cards */}
           {isLoading ? (
-            <div className="grid gap-4">
-              {[...Array(5)].map((_, i) => <SkeletonCard key={i} />)}
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
+              {[...Array(6)].map((_, i) => <SkeletonCard key={i} />)}
             </div>
           ) : isError ? (
             <div className="text-center py-16">
               <AlertTriangle className="w-12 h-12 text-destructive mx-auto mb-4" />
               <p className="text-foreground font-medium mb-2">Something went wrong</p>
               <p className="text-muted-foreground text-sm mb-4">{error?.message || "Failed to load jobs"}</p>
-              <Button variant="outline" onClick={() => setFilters(prev => ({ ...prev }))}>Try Again</Button>
+              <Button variant="outline" className="min-h-[44px]" onClick={() => setFilters(prev => ({ ...prev }))}>Try Again</Button>
             </div>
           ) : jobs.length > 0 ? (
-            <div className="grid gap-4">
+            <div className="grid grid-cols-1 md:grid-cols-2 lg:grid-cols-3 gap-6">
               {transformedJobs.map((job, index) => (
                 <JobCard
                   key={job.id}
@@ -299,7 +299,7 @@ const Jobs = () => {
               <SearchX className="w-12 h-12 text-muted-foreground mx-auto mb-4" />
               <p className="text-foreground font-medium mb-2">No jobs found</p>
               <p className="text-muted-foreground text-sm mb-4">Try adjusting your filters or search query</p>
-              <Button variant="outline" onClick={() => setFilters(DEFAULT_FILTERS)}>Clear Filters</Button>
+              <Button variant="outline" className="min-h-[44px]" onClick={() => setFilters(DEFAULT_FILTERS)}>Clear Filters</Button>
             </div>
           )}
 

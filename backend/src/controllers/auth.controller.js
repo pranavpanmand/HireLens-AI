@@ -25,7 +25,7 @@ const setTokenCookie = (res, token) => {
     res.cookie('jwt', token, {
         httpOnly: true,
         secure: env_1.env.NODE_ENV === 'production', // Use secure cookies in production
-        sameSite: 'strict',
+        sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
     });
 };
@@ -125,7 +125,7 @@ const forgotPassword = async (req, res, next) => {
         if (!email) throw new errorHandler_1.AppError('Please provide an email', 400);
 
         const user = await User_1.User.findOne({ email: email.toLowerCase() });
-        
+
         // Always return success to prevent email enumeration
         if (!user) {
             return res.json({ success: true, message: 'If that email exists, a reset link has been sent.' });
@@ -133,7 +133,7 @@ const forgotPassword = async (req, res, next) => {
 
         // Generate reset token (random hex string)
         const resetToken = crypto.randomBytes(20).toString('hex');
-        
+
         // Hash token and set expiry (30 mins)
         user.resetPasswordToken = crypto.createHash('sha256').update(resetToken).digest('hex');
         user.resetPasswordExpire = Date.now() + 30 * 60 * 1000;

@@ -1,7 +1,7 @@
 import { useEffect, useState } from "react";
 import { useParams, useNavigate } from "react-router-dom";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { MapPin, Clock, DollarSign, Building2, Bookmark, ExternalLink, ArrowLeft, Loader2, Sparkles, AlertCircle, FileText, Copy, Download, MessageSquare } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
@@ -16,7 +16,7 @@ export default function JobDetails() {
   const { id } = useParams();
   const navigate = useNavigate();
   const { user } = useAuth();
-  
+
   const [analyzing, setAnalyzing] = useState(false);
   const [matchResult, setMatchResult] = useState(null);
   const [analyzeError, setAnalyzeError] = useState(null);
@@ -45,7 +45,7 @@ export default function JobDetails() {
   const job = jobResponse?.data;
   const coverLetterHook = useCoverLetter();
   const queryClient = useQueryClient();
-  
+
   const { data: savedJobs } = useSavedJobs();
   const toggleSaveJob = useToggleSaveJob();
   const isSaved = savedJobs?.some(sj => sj._id === id);
@@ -63,7 +63,7 @@ export default function JobDetails() {
       navigate('/login');
       return;
     }
-    
+
     setAnalyzing(true);
     setAnalyzeError(null);
     try {
@@ -75,13 +75,13 @@ export default function JobDetails() {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
       });
-      
+
       const data = await response.json();
-      
+
       if (!data.success) {
         throw new Error(data.message || data.error || 'Analysis failed. Please ensure you have uploaded a resume in your Dashboard.');
       }
-      
+
       setMatchResult(data.data);
     } catch (err) {
       console.error(err);
@@ -164,10 +164,10 @@ export default function JobDetails() {
   return (
     <div className="min-h-screen pt-24 pb-12 bg-background">
       <div className="container max-w-4xl mx-auto px-4">
-        
+
         {/* Back Button */}
-        <Button 
-          variant="ghost" 
+        <Button
+          variant="ghost"
           onClick={() => navigate('/jobs')}
           className="mb-6 -ml-4 text-muted-foreground hover:text-foreground"
         >
@@ -176,7 +176,7 @@ export default function JobDetails() {
         </Button>
 
         {/* Header Section */}
-        <motion.div 
+        <motion.div
           initial={{ opacity: 0, y: 20 }}
           animate={{ opacity: 1, y: 0 }}
           className="bg-card rounded-2xl p-8 shadow-card border border-border mb-8"
@@ -185,7 +185,7 @@ export default function JobDetails() {
             <div className="w-20 h-20 rounded-2xl bg-gradient-primary flex items-center justify-center flex-shrink-0 shadow-soft">
               <Building2 className="w-10 h-10 text-primary-foreground" />
             </div>
-            
+
             <div className="flex-1 w-full">
               <div className="flex flex-col md:flex-row md:items-start justify-between gap-4">
                 <div>
@@ -220,7 +220,7 @@ export default function JobDetails() {
               </div>
 
               <div className="flex flex-wrap items-center gap-4">
-                <Button 
+                <Button
                   onClick={handleAnalyzeMatch}
                   disabled={analyzing}
                   className="bg-gradient-primary hover:opacity-90 flex-1 md:flex-none h-12 px-8 text-lg"
@@ -232,8 +232,8 @@ export default function JobDetails() {
                   )}
                   {analyzing ? 'Analyzing Match...' : 'Analyze Match'}
                 </Button>
-                
-                <Button 
+
+                <Button
                   onClick={handleGenerateCoverLetter}
                   disabled={generatingCoverLetter}
                   variant="outline"
@@ -247,7 +247,7 @@ export default function JobDetails() {
                   {generatingCoverLetter ? 'Writing...' : 'Cover Letter'}
                 </Button>
 
-                <Button 
+                <Button
                   onClick={() => setShowMockInterview(true)}
                   variant="outline"
                   className="flex-1 md:flex-none h-12 px-8 text-lg border-2"
@@ -257,16 +257,16 @@ export default function JobDetails() {
                 </Button>
 
                 {job.applyUrl ? (
-                  <Button 
+                  <Button
                     onClick={handleApply}
-                    variant="outline" 
+                    variant="outline"
                     className="flex-1 md:flex-none h-12 px-8 text-lg border-2 ml-auto"
                   >
                     Apply Externally
                     <ExternalLink className="w-5 h-5 ml-2" />
                   </Button>
                 ) : (
-                  <Button 
+                  <Button
                     onClick={() => applyMutation.mutate()}
                     disabled={applyMutation.isPending}
                     className="bg-primary hover:bg-primary/90 flex-1 md:flex-none h-12 px-8 text-lg ml-auto"
@@ -283,7 +283,7 @@ export default function JobDetails() {
         {/* AI Cover Letter Result */}
         <AnimatePresence>
           {coverLetterData && (
-            <motion.div 
+            <motion.div
               initial={{ opacity: 0, y: 20, height: 0 }}
               animate={{ opacity: 1, y: 0, height: 'auto' }}
               exit={{ opacity: 0, y: 20, height: 0 }}
@@ -291,7 +291,7 @@ export default function JobDetails() {
             >
               <div className="bg-card rounded-2xl p-8 shadow-card border border-primary/30 relative overflow-hidden">
                 <div className="absolute top-0 left-0 w-full h-1 bg-gradient-primary"></div>
-                
+
                 <div className="flex flex-col md:flex-row justify-between items-start gap-4 mb-6">
                   <div className="flex items-center gap-3">
                     <div className="w-10 h-10 rounded-full bg-primary/10 flex items-center justify-center">
@@ -302,7 +302,7 @@ export default function JobDetails() {
                       <p className="text-sm text-muted-foreground">Tailored for {job.company}</p>
                     </div>
                   </div>
-                  
+
                   <div className="flex gap-2">
                     <Button variant="outline" size="sm" onClick={() => {
                       navigator.clipboard.writeText(coverLetterContent);
@@ -312,7 +312,7 @@ export default function JobDetails() {
                     </Button>
                     <Button size="sm" className="bg-primary" onClick={() => {
                       const element = document.createElement("a");
-                      const file = new Blob([coverLetterContent], {type: 'text/plain'});
+                      const file = new Blob([coverLetterContent], { type: 'text/plain' });
                       element.href = URL.createObjectURL(file);
                       element.download = `Cover_Letter_${job.company}.txt`;
                       document.body.appendChild(element);
@@ -325,13 +325,13 @@ export default function JobDetails() {
                 </div>
 
                 <div className="bg-muted/30 border border-border rounded-xl p-6">
-                  <textarea 
+                  <textarea
                     value={coverLetterContent}
                     onChange={(e) => setCoverLetterContent(e.target.value)}
                     className="w-full min-h-[400px] bg-transparent border-none resize-y focus:ring-0 text-foreground leading-relaxed font-serif p-0"
                   />
                 </div>
-                
+
                 <div className="mt-4 flex gap-4 text-sm">
                   <div>
                     <span className="font-semibold text-foreground mr-2">Key Highlights:</span>
@@ -345,7 +345,7 @@ export default function JobDetails() {
 
         {/* AI Analysis Result */}
         {analyzeError && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, height: 0 }}
             animate={{ opacity: 1, height: 'auto' }}
             className="mb-8 p-6 bg-destructive/10 border border-destructive/20 rounded-xl"
@@ -355,8 +355,8 @@ export default function JobDetails() {
               <div>
                 <h3 className="text-lg font-semibold text-destructive mb-1">Analysis Failed</h3>
                 <p className="text-destructive/80">{analyzeError}</p>
-                <Button 
-                  variant="outline" 
+                <Button
+                  variant="outline"
                   className="mt-4 border-destructive/20 text-destructive hover:bg-destructive/10"
                   onClick={() => navigate('/dashboard')}
                 >
@@ -368,7 +368,7 @@ export default function JobDetails() {
         )}
 
         {matchResult && (
-          <motion.div 
+          <motion.div
             initial={{ opacity: 0, y: 20 }}
             animate={{ opacity: 1, y: 0 }}
             className="mb-8 p-8 bg-gradient-to-br from-primary/10 via-primary/5 to-transparent border border-primary/20 rounded-2xl"
@@ -377,7 +377,7 @@ export default function JobDetails() {
               <Sparkles className="w-8 h-8 text-primary" />
               <h2 className="text-2xl font-display font-bold">AI Match Analysis</h2>
             </div>
-            
+
             <div className="grid md:grid-cols-3 gap-8">
               <div className="md:col-span-1">
                 <div className="bg-background rounded-xl p-6 text-center shadow-sm border border-border h-full flex flex-col justify-center">
@@ -387,7 +387,7 @@ export default function JobDetails() {
                   </div>
                 </div>
               </div>
-              
+
               <div className="md:col-span-2 space-y-6">
                 <div>
                   <h3 className="text-lg font-semibold mb-2">Summary</h3>
@@ -395,7 +395,7 @@ export default function JobDetails() {
                     {matchResult.summary}
                   </p>
                 </div>
-                
+
                 <div className="grid grid-cols-2 gap-6">
                   <div>
                     <h3 className="font-semibold mb-3 flex items-center gap-2 text-emerald-600">
@@ -455,9 +455,9 @@ export default function JobDetails() {
         {/* Content Tabs / Main Content */}
         <div className="bg-card rounded-2xl p-8 shadow-card border border-border">
           <h2 className="text-2xl font-bold mb-6 pb-4 border-b border-border">Job Description</h2>
-          
+
           {job.description ? (
-            <div 
+            <div
               className="prose prose-gray max-w-none dark:prose-invert prose-headings:font-display prose-a:text-primary hover:prose-a:text-primary/80"
               dangerouslySetInnerHTML={createMarkup(job.description)}
             />
@@ -489,7 +489,7 @@ export default function JobDetails() {
 
       <AnimatePresence>
         {showMockInterview && (
-          <MockInterviewModal 
+          <MockInterviewModal
             job={job}
             onClose={() => setShowMockInterview(false)}
           />

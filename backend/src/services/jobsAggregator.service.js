@@ -99,8 +99,11 @@ async function aggregateJobs({ search = '', location = '', source = '', page = 1
     // Asynchronously trigger embedding for any newly added jobs without blocking
     if (deduplicated.length > 0) {
         setImmediate(() => {
-            const fetch = require('node-fetch') || global.fetch;
-            fetch('http://localhost:5000/api/recommendations/embed-jobs', { method: 'POST' })
+            const port = process.env.PORT || 5000;
+            const baseUrl = process.env.NODE_ENV === 'production'
+                ? `http://localhost:${port}`
+                : 'http://localhost:5000';
+            fetch(`${baseUrl}/api/recommendations/embed-jobs`, { method: 'POST' })
                 .catch(err => console.error('[Aggregator] Failed to trigger background embedding:', err.message));
         });
     }

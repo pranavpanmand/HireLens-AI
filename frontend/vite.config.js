@@ -10,12 +10,14 @@ export default defineConfig(({ mode }) => ({
     strictPort: true,
     proxy: {
       '/api': {
-        target: 'http://localhost:5000',
+        target: 'https://hirelens-ai-dla2.onrender.com',
         changeOrigin: true,
+        secure: false,
       },
       '/uploads': {
-        target: 'http://localhost:5000',
+        target: 'https://hirelens-ai-dla2.onrender.com',
         changeOrigin: true,
+        secure: false,
       }
     },
     hmr: {

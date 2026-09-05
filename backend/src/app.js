@@ -13,6 +13,8 @@ const errorHandler_1 = require("./middleware/errorHandler");
 const routes_1 = require("./routes");
 const env_1 = require("./config/env");
 const app = (0, express_1.default)();
+// Trust reverse proxy (Render, Heroku, etc.) — required by express-rate-limit
+app.set('trust proxy', 1);
 // Security headers
 app.use((0, helmet_1.default)());
 // CORS — allow frontend dev server

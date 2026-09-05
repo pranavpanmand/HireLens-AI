@@ -18,8 +18,8 @@ app.use((0, helmet_1.default)());
 // CORS — allow frontend dev server
 app.use((0, cors_1.default)({
     origin: env_1.env.NODE_ENV === 'production'
-        ? process.env.CLIENT_URL || 'http://localhost:5173'
-        : 'http://localhost:5173',
+        ? process.env.CLIENT_URL || 'http://localhost:8080'
+        : 'http://localhost:8080',
     credentials: true,
 }));
 const rateLimiter = require('./middleware/rateLimiter');

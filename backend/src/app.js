@@ -17,10 +17,10 @@ const app = (0, express_1.default)();
 app.set('trust proxy', 1);
 // Security headers
 app.use((0, helmet_1.default)());
-// CORS — allow frontend dev server
+// CORS — allow frontend
 app.use((0, cors_1.default)({
     origin: env_1.env.NODE_ENV === 'production'
-        ? process.env.CLIENT_URL || 'http://localhost:8080'
+        ? [process.env.CLIENT_URL || 'https://hire-lens-ai-omega.vercel.app', 'https://hire-lens-ai-omega.vercel.app', 'http://localhost:8080']
         : 'http://localhost:8080',
     credentials: true,
 }));

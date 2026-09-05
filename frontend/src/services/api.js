@@ -29,7 +29,8 @@ export async function fetchApi(endpoint, options = {}) {
 
   const response = await fetch(url, {
     ...options,
-    headers
+    headers,
+    credentials: 'include'
   });
 
   let data;

@@ -1,4 +1,4 @@
-import { fetchApi } from './api';
+import { fetchApi, API_URL } from './api';
 
 export const profileApi = {
   getProfile: () => fetchApi('/profile'),
@@ -17,10 +17,10 @@ export const profileApi = {
   uploadPhoto: async (file) => {
     const formData = new FormData();
     formData.append('photo', file);
-    // Use the raw fetchApi call pattern without JSON.stringify
     const token = localStorage.getItem('token');
-    const response = await fetch('/api/profile/photo', {
+    const response = await fetch(`${API_URL}/profile/photo`, {
       method: 'POST',
+      credentials: 'include',
       headers: {
         'Authorization': `Bearer ${token}`
       },

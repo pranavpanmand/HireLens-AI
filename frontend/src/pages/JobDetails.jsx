@@ -11,6 +11,7 @@ import { useSavedJobs, useToggleSaveJob } from "@/hooks/useSavedJobs";
 import { MockInterviewModal } from "@/components/analysis/MockInterviewModal";
 import DOMPurify from 'dompurify';
 import { toast } from "sonner";
+import { API_URL } from "@/services/api";
 
 export default function JobDetails() {
   const { id } = useParams();
@@ -29,7 +30,8 @@ export default function JobDetails() {
   const { data: jobResponse, isLoading, isError } = useQuery({
     queryKey: ['job', id],
     queryFn: async () => {
-      const response = await fetch(`/api/jobs/${id}`, {
+      const response = await fetch(`${API_URL}/jobs/${id}`, {
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }
@@ -68,8 +70,9 @@ export default function JobDetails() {
     setAnalyzeError(null);
     try {
       // POST to match endpoint
-      const response = await fetch(`/api/matches/job/${id}`, {
+      const response = await fetch(`${API_URL}/matches/job/${id}`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
@@ -116,8 +119,9 @@ export default function JobDetails() {
 
   const applyMutation = useMutation({
     mutationFn: async () => {
-      const res = await fetch(`/api/applications/job/${id}`, {
+      const res = await fetch(`${API_URL}/applications/job/${id}`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         }

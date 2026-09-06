@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { API_URL } from "@/services/api";
 
 export const useChatbot = () => {
   const [messages, setMessages] = useState([
@@ -23,8 +24,9 @@ export const useChatbot = () => {
     setError(null);
 
     try {
-      const response = await fetch('/api/ai/chat', {
+      const response = await fetch(`${API_URL}/ai/chat`, {
         method: 'POST',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`

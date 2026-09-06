@@ -8,6 +8,7 @@ import { Badge } from "@/components/ui/badge";
 import { toast } from "sonner";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { API_URL } from "@/services/api";
 
 export default function JobApplicants() {
   const { id: jobId } = useParams();
@@ -17,7 +18,8 @@ export default function JobApplicants() {
   const { data: response, isLoading } = useQuery({
     queryKey: ['job-applicants', jobId],
     queryFn: async () => {
-      const res = await fetch(`/api/applications/job/${jobId}`, {
+      const res = await fetch(`${API_URL}/applications/job/${jobId}`, {
+        credentials: 'include',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (!res.ok) throw new Error('Failed to fetch applicants');
@@ -29,8 +31,9 @@ export default function JobApplicants() {
 
   const updateStatus = useMutation({
     mutationFn: async ({ applicationId, status }) => {
-      const res = await fetch(`/api/applications/${applicationId}/status`, {
+      const res = await fetch(`${API_URL}/applications/${applicationId}/status`, {
         method: 'PUT',
+        credentials: 'include',
         headers: {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`

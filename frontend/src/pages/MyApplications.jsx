@@ -6,13 +6,15 @@ import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
+import { API_URL } from "@/services/api";
 
 export default function MyApplications() {
   const navigate = useNavigate();
   const { data: response, isLoading } = useQuery({
     queryKey: ['my-applications'],
     queryFn: async () => {
-      const res = await fetch(`/api/applications/my`, {
+      const res = await fetch(`${API_URL}/applications/my`, {
+        credentials: 'include',
         headers: { 'Authorization': `Bearer ${localStorage.getItem('token')}` }
       });
       if (!res.ok) throw new Error('Failed to fetch applications');

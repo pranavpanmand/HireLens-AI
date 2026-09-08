@@ -61,7 +61,7 @@ export function GlobalLoader({ message = "AI is analyzing...", fullScreen = fals
         className="text-center"
       >
         <h3 className="font-display font-bold text-2xl text-transparent bg-clip-text bg-gradient-to-r from-primary via-secondary to-accent-gold animate-gradient-x mb-3">
-          JobMatch AI
+          HireLens AI
         </h3>
         <motion.div className="flex items-center justify-center gap-1">
           <p className="text-secondary font-medium tracking-widest uppercase text-xs">{message}</p>

@@ -18,7 +18,7 @@ export const Footer = () => {
                 <Briefcase className="w-6 h-6 text-primary-foreground" />
               </div>
               <span className="font-display font-bold text-2xl text-foreground">
-                JobMatch<span className="text-primary">AI</span>
+                HireLens<span className="text-primary">AI</span>
               </span>
             </Link>
             <p className="text-muted-foreground text-base max-w-sm mb-8 leading-relaxed">

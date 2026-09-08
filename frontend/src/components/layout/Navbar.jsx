@@ -85,7 +85,7 @@ export const Navbar = () => {
                 <Briefcase className="w-4 h-4 text-primary-foreground relative z-10" />
               </div>
               <span className="font-display font-bold text-lg text-foreground">
-                JobMatch<span className="text-secondary">AI</span>
+                HireLens<span className="text-secondary">AI</span>
               </span>
             </Link>
 

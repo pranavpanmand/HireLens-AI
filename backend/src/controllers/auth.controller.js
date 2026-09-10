@@ -3,10 +3,11 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMe = exports.logout = exports.login = exports.register = exports.resetPassword = exports.forgotPassword = void 0;
+exports.getMe = exports.logout = exports.login = exports.register = exports.googleAuth = exports.resetPassword = exports.forgotPassword = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = require("../models/User");
 const env_1 = require("../config/env");
+const firebase_1 = require("../config/firebase");
 const errorHandler_1 = require("../middleware/errorHandler");
 const email_service_1 = require("../services/email.service");
 const crypto = require("crypto");
@@ -22,13 +23,107 @@ const generateToken = (user) => {
     });
 };
 const setTokenCookie = (res, token) => {
-    res.cookie('jwt', token, {
+    res.cookie('jwt', token, cookieOptions());
+};
+/**
+ * Cookie attributes, in one place. A cookie can only be cleared by a response
+ * whose attributes match the ones it was set with, so logout reuses this.
+ */
+function cookieOptions() {
+    return {
         httpOnly: true,
         secure: env_1.env.NODE_ENV === 'production', // Use secure cookies in production
         sameSite: 'none',
         maxAge: 7 * 24 * 60 * 60 * 1000, // 7 days
-    });
+    };
+}
+/**
+ * Sign in (or sign up) with a Google account.
+ *
+ * The client sends the Firebase ID token it got from the Google popup — never a
+ * bare email, which would be trivially forgeable. We verify the token's
+ * signature and claims against Google, and only then mint our own JWT. From
+ * that point on the session is an ordinary HireLens session: same cookie, same
+ * middleware, same MongoDB user document.
+ */
+const googleAuth = async (req, res, next) => {
+    try {
+        if (!(0, firebase_1.isGoogleAuthConfigured)()) {
+            throw new errorHandler_1.AppError(
+                'Google sign-in is not enabled on this server. Please use your email and password.',
+                503
+            );
+        }
+
+        const { idToken, role } = req.body;
+
+        let profile;
+        try {
+            profile = await (0, firebase_1.verifyGoogleIdToken)(idToken);
+        }
+        catch (err) {
+            // verifyGoogleIdToken throws user-safe messages by design.
+            throw new errorHandler_1.AppError(err.message || 'Could not verify that Google sign-in.', 401);
+        }
+
+        // Match on the Firebase uid first, then fall back to the email so that a
+        // user who originally registered with a password can link Google to the
+        // same account instead of ending up with a duplicate.
+        let user = await User_1.User.findOne({
+            $or: [{ googleId: profile.googleId }, { email: profile.email }],
+        });
+
+        let isNewUser = false;
+
+        if (user) {
+            let changed = false;
+            if (!user.googleId) {
+                user.googleId = profile.googleId;
+                changed = true;
+            }
+            if (!user.avatarUrl && profile.photoUrl) {
+                user.avatarUrl = profile.photoUrl;
+                changed = true;
+            }
+            if (changed) {
+                // Skip validation: `password` is select:false so it isn't loaded
+                // here, and we must not trip its required-check on a local account.
+                await user.save({ validateBeforeSave: false });
+            }
+        }
+        else {
+            isNewUser = true;
+            user = await User_1.User.create({
+                email: profile.email,
+                fullName: profile.fullName || profile.email.split('@')[0],
+                // Only ever trust the two known roles; anything else becomes a student.
+                role: role === 'recruiter' ? 'recruiter' : 'student',
+                authProvider: 'google',
+                googleId: profile.googleId,
+                avatarUrl: profile.photoUrl || null,
+            });
+        }
+
+        const token = generateToken(user);
+        setTokenCookie(res, token);
+
+        res.status(isNewUser ? 201 : 200).json({
+            success: true,
+            data: {
+                id: user._id,
+                email: user.email,
+                fullName: user.fullName,
+                role: user.role,
+                avatarUrl: user.avatarUrl,
+                isNewUser,
+            },
+        });
+    }
+    catch (error) {
+        next(error);
+    }
 };
+exports.googleAuth = googleAuth;
 const register = async (req, res, next) => {
     try {
         const { email, password, fullName, role } = req.body;
@@ -84,10 +179,12 @@ const login = async (req, res, next) => {
 };
 exports.login = login;
 const logout = (_req, res) => {
-    res.cookie('jwt', '', {
-        httpOnly: true,
-        expires: new Date(0),
-    });
+    // A cookie is only cleared when the clearing response repeats the attributes
+    // it was set with. The previous version omitted secure/sameSite, so in
+    // production (SameSite=None; Secure) the browser kept the old cookie and the
+    // user stayed signed in after "log out".
+    const { maxAge, ...attrs } = cookieOptions();
+    res.clearCookie('jwt', attrs);
     res.json({ success: true, message: 'Logged out successfully' });
 };
 exports.logout = logout;

@@ -2,7 +2,7 @@ import { Toaster } from "@/components/ui/toaster";
 import { Toaster as Sonner } from "@/components/ui/sonner";
 import { TooltipProvider } from "@/components/ui/tooltip";
 import { QueryClient, QueryClientProvider } from "@tanstack/react-query";
-import { BrowserRouter, Routes, Route } from "react-router-dom";
+import { BrowserRouter, Routes, Route, Navigate } from "react-router-dom";
 import { AuthProvider } from "@/contexts/AuthContext";
 import { ProtectedRoute } from "@/components/auth/ProtectedRoute";
 import Index from "./pages/Index";
@@ -13,8 +13,6 @@ import Profile from "./pages/Profile";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
 import ResumeGenerator from "./pages/ResumeGenerator";
 import CoverLetterGenerator from "./pages/CoverLetterGenerator";
-import MockInterviewPage from "./pages/MockInterviewPage";
-import MockInterviewHistory from "./pages/MockInterviewHistory";
 import LinkedInOptimizer from "./pages/LinkedInOptimizer";
 import NetworkingGenerator from "./pages/NetworkingGenerator";
 import StarStories from "./pages/StarStories";
@@ -39,6 +37,13 @@ import VideoResume from "./pages/VideoResume";
 import AptitudeQuest from "./pages/AptitudeQuest";
 import PersonalityTest from "./pages/PersonalityTest";
 import Events from "./pages/Events";
+
+// AI Interview Coach (merged from the PrepNexa interview project)
+import InterviewHome from "./pages/interview/InterviewHome";
+import InterviewSetup from "./pages/interview/InterviewSetup";
+import InterviewSession from "./pages/interview/InterviewSession";
+import InterviewReport from "./pages/interview/InterviewReport";
+import InterviewHistory from "./pages/interview/InterviewHistory";
 
 import { useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
@@ -67,8 +72,18 @@ const AnimatedRoutes = () => {
           <Route path="/resume-analyzer" element={<PageTransition><ResumeAnalyzer /></PageTransition>} />
           <Route path="/cover-letter" element={<PageTransition><CoverLetterGenerator /></PageTransition>} />
           <Route path="/resume-generator" element={<PageTransition><ResumeGenerator /></PageTransition>} />
-          <Route path="/mock-interview" element={<PageTransition><MockInterviewPage /></PageTransition>} />
-          <Route path="/mock-interview/history" element={<PageTransition><MockInterviewHistory /></PageTransition>} />
+
+          {/* AI Interview Coach */}
+          <Route path="/interview" element={<PageTransition><InterviewHome /></PageTransition>} />
+          <Route path="/interview/start" element={<PageTransition><InterviewSetup /></PageTransition>} />
+          <Route path="/interview/session/:sessionId" element={<PageTransition><InterviewSession /></PageTransition>} />
+          <Route path="/interview/report/:sessionId" element={<PageTransition><InterviewReport /></PageTransition>} />
+          <Route path="/interview/history" element={<PageTransition><InterviewHistory /></PageTransition>} />
+          <Route path="/interview/reports" element={<PageTransition><InterviewHistory variant="reports" /></PageTransition>} />
+          {/* Legacy mock-interview paths now live under /interview */}
+          <Route path="/mock-interview" element={<Navigate to="/interview" replace />} />
+          <Route path="/mock-interview/history" element={<Navigate to="/interview/history" replace />} />
+
           <Route path="/linkedin-optimizer" element={<PageTransition><LinkedInOptimizer /></PageTransition>} />
           <Route path="/networking" element={<PageTransition><NetworkingGenerator /></PageTransition>} />
           <Route path="/star-stories" element={<PageTransition><StarStories /></PageTransition>} />

@@ -27,6 +27,11 @@ function getEnv() {
         CLOUDINARY_CLOUD_NAME: process.env.CLOUDINARY_CLOUD_NAME,
         CLOUDINARY_API_KEY: process.env.CLOUDINARY_API_KEY,
         CLOUDINARY_API_SECRET: process.env.CLOUDINARY_API_SECRET,
+        // Google sign-in (optional). Present => the /api/auth/google route can
+        // verify Firebase ID tokens. Absent => email/password auth only.
+        FIREBASE_PROJECT_ID: process.env.FIREBASE_PROJECT_ID || '',
+        FIREBASE_CLIENT_EMAIL: process.env.FIREBASE_CLIENT_EMAIL || '',
+        FIREBASE_PRIVATE_KEY: process.env.FIREBASE_PRIVATE_KEY || '',
     };
 }
 exports.env = getEnv();

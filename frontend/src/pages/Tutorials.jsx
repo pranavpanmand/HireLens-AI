@@ -42,18 +42,19 @@ export default function Tutorials() {
     },
     {
       id: "mock-interview",
-      title: "Practicing with the AI Mock Interview Simulator",
+      title: "Practicing with the AI Interview Coach",
       icon: <MessageSquare className="w-5 h-5 text-purple-500" />,
       content: (
         <div className="space-y-4">
           <p>Practice makes perfect. Simulate a real interview with our AI Recruiter.</p>
           <ol className="list-decimal pl-5 space-y-2 text-muted-foreground">
-            <li>Go to the <strong>Mock Interview</strong> tool.</li>
-            <li>Select a recent job posting or manually paste a job description.</li>
-            <li><strong>Crucial Step:</strong> Select your Interview Type (Technical, Behavioral, HR, Mixed) and Difficulty Level to customize your experience.</li>
-            <li>Click Start. The AI Recruiter will ask you 6 tailored questions.</li>
-            <li>You can type your answer or use your microphone to speak naturally.</li>
-            <li>After the session, review your <strong>Detailed Summary Report</strong>, which breaks down your performance into Technical, Communication, and Confidence scores, along with actionable improvements.</li>
+            <li>Open <strong>AI Interview Coach</strong> in the sidebar, then <strong>Start Mock Interview</strong>.</li>
+            <li>Pick how you want to practice: <strong>Conversational</strong> (the interviewer reads each question aloud and you answer by speaking) or <strong>Structured Practice</strong> (read and type — works without a microphone).</li>
+            <li>Choose what the questions are based on: a saved job, your resume, or a target role you describe yourself. Pasting the job description sharpens the questions.</li>
+            <li><strong>Crucial step:</strong> Set the Category (Technical, Behavioral, HR, Mixed), the Difficulty (Entry, Mid, Senior) and how many questions you want (5, 10 or 15).</li>
+            <li>Answer each question, then <strong>review and edit the transcript</strong> before submitting — speech-to-text isn't perfect, and you're scored on what you submit.</li>
+            <li>You get feedback after every answer: a score out of 10, what went well, what to improve, and a stronger example answer.</li>
+            <li>At the end, read your <strong>final report</strong> — an overall score out of 100 broken down into Technical Knowledge, Communication, Confidence and Clarity, plus your weakest answers rewritten. Download it as a PDF, and find it again any time under <strong>Interview History</strong>.</li>
           </ol>
         </div>
       )

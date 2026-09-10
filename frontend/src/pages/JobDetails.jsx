@@ -8,7 +8,6 @@ import { Badge } from "@/components/ui/badge";
 import { useAuth } from "@/contexts/AuthContext";
 import { useCoverLetter } from "@/hooks/useCoverLetter";
 import { useSavedJobs, useToggleSaveJob } from "@/hooks/useSavedJobs";
-import { MockInterviewModal } from "@/components/analysis/MockInterviewModal";
 import DOMPurify from 'dompurify';
 import { toast } from "sonner";
 import { API_URL } from "@/services/api";
@@ -24,7 +23,6 @@ export default function JobDetails() {
   const [generatingCoverLetter, setGeneratingCoverLetter] = useState(false);
   const [coverLetterData, setCoverLetterData] = useState(null);
   const [coverLetterContent, setCoverLetterContent] = useState("");
-  const [showMockInterview, setShowMockInterview] = useState(false);
 
   // Fetch job details by ID from the backend
   const { data: jobResponse, isLoading, isError } = useQuery({
@@ -252,7 +250,18 @@ export default function JobDetails() {
                 </Button>
 
                 <Button
-                  onClick={() => setShowMockInterview(true)}
+                  onClick={() =>
+                    navigate("/interview/start", {
+                      state: {
+                        job: {
+                          id: job.id || job._id,
+                          title: job.title,
+                          company: job.company,
+                          description: job.description || "",
+                        },
+                      },
+                    })
+                  }
                   variant="outline"
                   className="flex-1 md:flex-none h-12 px-8 text-lg border-2"
                 >
@@ -490,15 +499,6 @@ export default function JobDetails() {
         </div>
 
       </div>
-
-      <AnimatePresence>
-        {showMockInterview && (
-          <MockInterviewModal
-            job={job}
-            onClose={() => setShowMockInterview(false)}
-          />
-        )}
-      </AnimatePresence>
     </div>
   );
 }

@@ -1,5 +1,6 @@
 import { createContext, useContext, useEffect, useState } from "react";
 import { authApi } from "@/services/authApi";
+import { signInWithGoogle as openGooglePopup, GoogleSignInCancelled } from "@/lib/firebase";
 
 
 
@@ -59,7 +60,8 @@ export const AuthProvider = ({ children }) => {
       const newUser = await authApi.register({ email, password, fullName, role });
       setUser(newUser);
       setRoles([newUser.role]);
-      return { error: null };
+      // `user` is returned as well as `error` so callers can route by role.
+      return { error: null, user: newUser };
     } catch (error) {
       return { error: error instanceof Error ? error : new Error(error?.message || 'Signup failed') };
     }
@@ -70,9 +72,34 @@ export const AuthProvider = ({ children }) => {
       const loggedInUser = await authApi.login({ email, password });
       setUser(loggedInUser);
       setRoles([loggedInUser.role]);
-      return { error: null };
+      return { error: null, user: loggedInUser };
     } catch (error) {
       return { error: error instanceof Error ? error : new Error(error?.message || 'Login failed') };
+    }
+  };
+
+  /**
+   * Google sign-in. Two steps, and the second one is the one that matters:
+   * the popup only produces a token, and the server decides whether it is real
+   * before any session exists. `role` is used only when the account is new.
+   *
+   * Returns { error, cancelled } — a closed popup is not an error worth shouting about.
+   */
+  const signInWithGoogle = async (role) => {
+    try {
+      const idToken = await openGooglePopup();
+      const googleUser = await authApi.google({ idToken, role });
+      setUser(googleUser);
+      setRoles([googleUser.role]);
+      return { error: null, cancelled: false, user: googleUser };
+    } catch (error) {
+      if (error instanceof GoogleSignInCancelled) {
+        return { error: null, cancelled: true };
+      }
+      return {
+        error: error instanceof Error ? error : new Error(error?.message || 'Google sign-in failed'),
+        cancelled: false,
+      };
     }
   };
 
@@ -98,6 +125,7 @@ export const AuthProvider = ({ children }) => {
         isLoading,
         signUp,
         signIn,
+        signInWithGoogle,
         signOut,
         hasRole
       }}>

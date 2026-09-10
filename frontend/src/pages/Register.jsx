@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Tabs, TabsList, TabsTrigger } from "@/components/ui/tabs";
 import { useAuth } from "@/contexts/AuthContext";
+import { GoogleSignInButton, AuthDivider } from "@/components/auth/GoogleSignInButton";
 import { toast } from "sonner";
 
 const Register = () => {
@@ -24,6 +25,11 @@ const Register = () => {
   const nextParam = searchParams.get("next");
   const safeNext = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
 
+  // Registration signs you straight in (the server sets the session cookie), so
+  // send people into the product rather than back to a login form.
+  const destinationFor = (user) =>
+    safeNext ?? (user?.role === "recruiter" ? "/recruiter" : "/jobs");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
 
@@ -34,7 +40,7 @@ const Register = () => {
 
     setIsLoading(true);
 
-    const { error } = await signUp(formData.email, formData.password, formData.name, userType);
+    const { error, user } = await signUp(formData.email, formData.password, formData.name, userType);
 
     if (error) {
       toast.error(error.message);
@@ -42,8 +48,9 @@ const Register = () => {
       return;
     }
 
-    toast.success("Account created! Please check your email to verify your account.");
-    navigate(safeNext ? `/login?next=${encodeURIComponent(safeNext)}` : "/login");
+    toast.success("Account created. Welcome to HireLens!");
+    navigate(destinationFor(user));
+    setIsLoading(false);
   };
 
   const handleChange = (e) => {
@@ -228,6 +235,17 @@ const Register = () => {
               </Link>
             </p>
           </form>
+
+          <AuthDivider>or</AuthDivider>
+
+          {/* The tab above decides which kind of account gets created if this
+              Google account is new; returning users keep the role they have. */}
+          <GoogleSignInButton
+            role={userType}
+            label="Sign up with Google"
+            disabled={isLoading}
+            onSuccess={(user) => navigate(destinationFor(user))}
+          />
 
           {/* Sign In Link */}
           <p className="text-center text-sm text-muted-foreground mt-8">

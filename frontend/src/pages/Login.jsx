@@ -7,6 +7,7 @@ import { Input } from "@/components/ui/input";
 import { Label } from "@/components/ui/label";
 import { Checkbox } from "@/components/ui/checkbox";
 import { useAuth } from "@/contexts/AuthContext";
+import { GoogleSignInButton, AuthDivider } from "@/components/auth/GoogleSignInButton";
 import { toast } from "sonner";
 
 const Login = () => {
@@ -14,17 +15,22 @@ const Login = () => {
   const [email, setEmail] = useState("");
   const [password, setPassword] = useState("");
   const [isLoading, setIsLoading] = useState(false);
-  const { signIn, hasRole } = useAuth();
+  const { signIn } = useAuth();
   const navigate = useNavigate();
   const [searchParams] = useSearchParams();
   const nextParam = searchParams.get("next");
   const safeNext = nextParam && nextParam.startsWith("/") && !nextParam.startsWith("//") ? nextParam : null;
 
+  // Recruiters have their own dashboard; sending them to the student job board
+  // would just bounce off that route's role guard.
+  const destinationFor = (user) =>
+    safeNext ?? (user?.role === "recruiter" ? "/recruiter" : "/jobs");
+
   const handleSubmit = async (e) => {
     e.preventDefault();
     setIsLoading(true);
 
-    const { error } = await signIn(email, password);
+    const { error, user } = await signIn(email, password);
 
     if (error) {
       toast.error(error.message);
@@ -33,8 +39,7 @@ const Login = () => {
     }
 
     toast.success("Welcome back!");
-    // Navigate to jobs page first, roles will be fetched and user can access appropriate dashboard
-    navigate(safeNext ?? "/jobs");
+    navigate(destinationFor(user));
     setIsLoading(false);
   };
 
@@ -136,6 +141,14 @@ const Login = () => {
               }
             </Button>
           </form>
+
+          <AuthDivider>or</AuthDivider>
+
+          <GoogleSignInButton
+            label="Sign in with Google"
+            disabled={isLoading}
+            onSuccess={(user) => navigate(destinationFor(user))}
+          />
 
           {/* Sign Up Link */}
           <p className="text-center text-sm text-muted-foreground mt-8">

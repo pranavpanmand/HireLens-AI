@@ -49,9 +49,29 @@ const userSchema = new mongoose_1.Schema({
     },
     password: {
         type: String,
-        required: [true, 'Password is required'],
+        // Google accounts never set a password, so this can't be unconditionally
+        // required. Regular function (not arrow) so `this` is the document.
+        required: [
+            function () { return this.authProvider !== 'google'; },
+            'Password is required',
+        ],
         minlength: [6, 'Password must be at least 6 characters'],
         select: false, // Never return password by default
+    },
+    // How this account signs in. 'local' = email + password (the default, so
+    // every existing user keeps working untouched).
+    authProvider: {
+        type: String,
+        enum: ['local', 'google'],
+        default: 'local',
+    },
+    // Firebase uid of the linked Google account. Sparse: only accounts that have
+    // actually linked Google carry the field, so the unique index ignores the rest.
+    googleId: {
+        type: String,
+        unique: true,
+        sparse: true,
+        index: true,
     },
     fullName: {
         type: String,
@@ -84,7 +104,7 @@ const userSchema = new mongoose_1.Schema({
 });
 // Hash password before saving
 userSchema.pre('save', async function (next) {
-    if (!this.isModified('password'))
+    if (!this.isModified('password') || !this.password)
         return next();
     const salt = await bcryptjs_1.default.genSalt(12);
     this.password = await bcryptjs_1.default.hash(this.password, salt);
@@ -92,6 +112,11 @@ userSchema.pre('save', async function (next) {
 });
 // Compare password method
 userSchema.methods.comparePassword = async function (candidatePassword) {
+    // Google-only accounts have no hash to compare against. Returning false (not
+    // throwing) keeps /auth/login's "invalid email or password" response uniform,
+    // so an attacker can't use it to discover which addresses use Google.
+    if (!this.password || !candidatePassword)
+        return false;
     return bcryptjs_1.default.compare(candidatePassword, this.password);
 };
 // Remove password from JSON output

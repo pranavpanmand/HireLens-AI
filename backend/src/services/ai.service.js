@@ -32,11 +32,38 @@ function getModel() {
 }
 
 function cleanJSON(text) {
-    let cleaned = text.trim();
+    let cleaned = (text || '').trim();
     if (cleaned.startsWith('```')) {
         cleaned = cleaned.replace(/^```(?:json)?\n?/, '').replace(/\n?```$/, '').trim();
     }
-    return JSON.parse(cleaned);
+    try {
+        return JSON.parse(cleaned);
+    }
+    catch (err) {
+        // Gemini occasionally prefixes prose or truncates. Salvage the outermost
+        // JSON object/array before giving up, so one malformed token does not
+        // surface to the user as an opaque 500.
+        const start = cleaned.search(/[{[]/);
+        const end = Math.max(cleaned.lastIndexOf('}'), cleaned.lastIndexOf(']'));
+        if (start !== -1 && end > start) {
+            try {
+                return JSON.parse(cleaned.slice(start, end + 1));
+            }
+            catch (_) { /* fall through to the thrown error below */ }
+        }
+        console.error('[Gemini API] Failed to parse model response as JSON:', cleaned.slice(0, 500));
+        const parseError = new Error('The AI returned a malformed response. Please try again.');
+        parseError.statusCode = 502;
+        parseError.isOperational = true;
+        throw parseError;
+    }
+}
+
+/** Coerce a model-supplied score into a number within [min, max]. */
+function clampScore(value, min = 0, max = 10) {
+    const n = Number(value);
+    if (!Number.isFinite(n)) return min;
+    return Math.min(max, Math.max(min, Math.round(n * 10) / 10));
 }
 
 /**
@@ -170,9 +197,12 @@ async function generateTailoredResume(resumeText, jobDescription, jobTitle, comp
 
 /**
  * Generate mock interview questions based on a job description, interview type, and difficulty.
+ * Questions ramp in difficulty across the set (warm-up first, hardest last) and each
+ * carries a per-question time limit used by the session timer.
  */
 async function generateMockQuestions(jobDescription, jobTitle, interviewType = 'Mixed', difficulty = 'Mid-Level', numberOfQuestions = 5) {
     const model = getModel();
+    const count = Math.min(30, Math.max(1, Number(numberOfQuestions) || 5));
     const prompt = `
     You are an expert technical recruiter and interviewer.
     Generate interview questions tailored to the following specifications:
@@ -180,11 +210,11 @@ async function generateMockQuestions(jobDescription, jobTitle, interviewType = '
     Job Title: ${jobTitle}
     Interview Type: ${interviewType}
     Difficulty Level: ${difficulty}
-    
-    Job Context/Description:
-    ${jobDescription.substring(0, 5000)}
 
-    Generate exactly ${numberOfQuestions} questions that strongly reflect the chosen "Interview Type" and "Difficulty Level".
+    Job Context/Description:
+    ${(jobDescription || '').substring(0, 5000)}
+
+    Generate exactly ${count} questions that strongly reflect the chosen "Interview Type" and "Difficulty Level".
     - If Technical: Focus primarily on coding, system design, or technical concepts relevant to the JD.
     - If Behavioral: Focus on past experiences, conflict resolution, leadership, and soft skills (STAR method).
     - If HR/Managerial: Focus on culture fit, career goals, situational judgement, and project management.
@@ -192,11 +222,18 @@ async function generateMockQuestions(jobDescription, jobTitle, interviewType = '
 
     Make the questions appropriate for a ${difficulty} candidate (e.g., Entry-level = foundational, Senior = architectural/strategic).
 
+    IMPORTANT ordering rule — the questions must ramp up in difficulty:
+    - Question 1 is an approachable warm-up ("easy").
+    - The middle questions are "medium".
+    - The final questions are the most demanding ("hard").
+    Ask exactly one question at a time; never bundle multiple questions into one string.
+    Do not repeat a question or ask two questions that test the same thing.
+
     Return JSON:
     {
       "questions": [
         {
-          "question": string,
+          "question": string (a single, self-contained question),
           "category": "technical" | "behavioral" | "situational" | "hr",
           "difficulty": "easy" | "medium" | "hard",
           "tips": string (brief tip for answering well based on the STAR method or technical best practices)
@@ -206,38 +243,115 @@ async function generateMockQuestions(jobDescription, jobTitle, interviewType = '
     `;
 
     const result = await callWithRetry(() => model.generateContent(prompt));
-    return cleanJSON(result.response.text());
+    const parsed = cleanJSON(result.response.text());
+
+    // Normalise: the model is not reliable about enums, and the schema now
+    // persists these fields, so an out-of-enum value would fail validation.
+    const CATEGORIES = ['technical', 'behavioral', 'situational', 'hr'];
+    const DIFFICULTIES = ['easy', 'medium', 'hard'];
+    const TIME_LIMITS = { easy: 60, medium: 90, hard: 120 };
+
+    const questions = (Array.isArray(parsed?.questions) ? parsed.questions : [])
+        .filter((q) => q && typeof q.question === 'string' && q.question.trim())
+        .slice(0, count)
+        .map((q) => {
+            const category = CATEGORIES.includes(String(q.category).toLowerCase())
+                ? String(q.category).toLowerCase()
+                : 'technical';
+            const qDifficulty = DIFFICULTIES.includes(String(q.difficulty).toLowerCase())
+                ? String(q.difficulty).toLowerCase()
+                : 'medium';
+            return {
+                question: q.question.trim(),
+                category,
+                difficulty: qDifficulty,
+                tips: typeof q.tips === 'string' ? q.tips.trim() : '',
+                timeLimit: TIME_LIMITS[qDifficulty],
+            };
+        });
+
+    if (!questions.length) {
+        const err = new Error('The AI did not return any interview questions. Please try again.');
+        err.statusCode = 502;
+        err.isOperational = true;
+        throw err;
+    }
+
+    return { questions };
 }
 
 /**
  * Evaluate a user's answer to an interview question.
+ * Returns the original clarity/relevance/specificity axes plus the
+ * confidence/communication/correctness axes merged in from PrepNexa.
  */
 async function evaluateAnswer(question, answer, jobDescription) {
+    const text = (answer || '').trim();
+
+    // Don't spend a Gemini call (or invent a score) on a blank answer.
+    if (!text) {
+        return {
+            score: 0, clarity: 0, relevance: 0, specificity: 0,
+            confidence: 0, communication: 0, correctness: 0,
+            feedback: 'No answer was recorded for this question. Attempting an answer — even a partial one — always scores better than silence.',
+            improvedAnswer: '',
+            skipped: true,
+        };
+    }
+
     const model = getModel();
     const prompt = `
-    You are an expert interview coach. Evaluate this answer.
+    You are an expert interview coach. Evaluate this answer honestly and specifically.
 
     Question: ${question}
-    
+
     Candidate's Answer:
-    ${answer.substring(0, 3000)}
+    ${text.substring(0, 3000)}
 
     Job Context:
-    ${jobDescription.substring(0, 2000)}
+    ${(jobDescription || '').substring(0, 2000)}
+
+    Scoring guidance — be a realistic interviewer, not a generous one:
+    - 0-3: does not answer the question, or is factually wrong.
+    - 4-6: answers it but is vague, generic, or missing evidence.
+    - 7-8: solid, specific, well-structured.
+    - 9-10: exceptional, with concrete detail and measurable outcomes.
+    Note that this answer was captured by speech-to-text, so ignore punctuation,
+    filler words and transcription artefacts. Judge the substance only.
 
     Return JSON:
     {
-      "score": number (0-10),
-      "clarity": number (0-10),
-      "relevance": number (0-10),
-      "specificity": number (0-10),
+      "score": number (0-10, the overall score),
+      "clarity": number (0-10, how coherent and easy to follow),
+      "relevance": number (0-10, how well it actually answers the question asked),
+      "specificity": number (0-10, use of concrete examples, numbers and outcomes),
+      "confidence": number (0-10, assertiveness and conviction),
+      "communication": number (0-10, structure and concision),
+      "correctness": number (0-10, factual/technical accuracy; for non-technical questions judge soundness of reasoning),
       "feedback": string (2-3 sentences of constructive feedback),
+      "whatWentWell": string (1-2 sentences naming a genuine strength of this answer),
+      "whatToImprove": string (1-2 sentences naming the single highest-impact fix),
       "improvedAnswer": string (a model answer for comparison, 2-3 sentences)
     }
     `;
 
     const result = await callWithRetry(() => model.generateContent(prompt));
-    return cleanJSON(result.response.text());
+    const parsed = cleanJSON(result.response.text());
+
+    return {
+        score: clampScore(parsed?.score),
+        clarity: clampScore(parsed?.clarity),
+        relevance: clampScore(parsed?.relevance),
+        specificity: clampScore(parsed?.specificity),
+        confidence: clampScore(parsed?.confidence),
+        communication: clampScore(parsed?.communication),
+        correctness: clampScore(parsed?.correctness),
+        feedback: typeof parsed?.feedback === 'string' ? parsed.feedback : '',
+        whatWentWell: typeof parsed?.whatWentWell === 'string' ? parsed.whatWentWell : '',
+        whatToImprove: typeof parsed?.whatToImprove === 'string' ? parsed.whatToImprove : '',
+        improvedAnswer: typeof parsed?.improvedAnswer === 'string' ? parsed.improvedAnswer : '',
+        skipped: false,
+    };
 }
 
 /**
@@ -249,7 +363,7 @@ async function generateInterviewSummary(questionsAndAnswers, jobDescription) {
     You are an expert executive career coach. Review the following mock interview transcript and generate a comprehensive performance summary.
 
     Job Context:
-    ${jobDescription.substring(0, 3000)}
+    ${(jobDescription || '').substring(0, 3000)}
 
     Q&A Transcript:
     ${JSON.stringify(questionsAndAnswers).substring(0, 15000)}
@@ -267,6 +381,7 @@ async function generateInterviewSummary(questionsAndAnswers, jobDescription) {
       },
       "strengths": [string] (2-3 bullet points on what they did well),
       "weaknesses": [string] (2-3 bullet points on what needs improvement),
+      "topImprovements": [string] (2-3 specific, actionable things to do differently in the next interview),
       "weakestAnswers": [
         {
           "originalQuestion": string,
@@ -278,7 +393,33 @@ async function generateInterviewSummary(questionsAndAnswers, jobDescription) {
     `;
 
     const result = await callWithRetry(() => model.generateContent(prompt));
-    return cleanJSON(result.response.text());
+    const parsed = cleanJSON(result.response.text());
+
+    const toStringArray = (value) => (Array.isArray(value) ? value : [])
+        .filter((v) => typeof v === 'string' && v.trim())
+        .map((v) => v.trim())
+        .slice(0, 5);
+
+    return {
+        narrative: typeof parsed?.narrative === 'string' ? parsed.narrative : '',
+        categoryScores: {
+            technical: clampScore(parsed?.categoryScores?.technical),
+            communication: clampScore(parsed?.categoryScores?.communication),
+            confidence: clampScore(parsed?.categoryScores?.confidence),
+            clarity: clampScore(parsed?.categoryScores?.clarity),
+        },
+        strengths: toStringArray(parsed?.strengths),
+        weaknesses: toStringArray(parsed?.weaknesses),
+        topImprovements: toStringArray(parsed?.topImprovements),
+        weakestAnswers: (Array.isArray(parsed?.weakestAnswers) ? parsed.weakestAnswers : [])
+            .filter((w) => w && typeof w.originalQuestion === 'string')
+            .slice(0, 3)
+            .map((w) => ({
+                originalQuestion: w.originalQuestion,
+                userAnswer: typeof w.userAnswer === 'string' ? w.userAnswer : '',
+                betterAnswer: typeof w.betterAnswer === 'string' ? w.betterAnswer : '',
+            })),
+    };
 }
 
 /**

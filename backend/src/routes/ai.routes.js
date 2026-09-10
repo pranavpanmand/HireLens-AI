@@ -27,10 +27,14 @@ router.post('/networking-message', rateLimiter_1.aiLimiter, ai_controller_1.gene
 router.post('/star-stories', rateLimiter_1.aiLimiter, ai_controller_1.generateStarStoriesHandler);
 
 // Mock Interview
-router.post('/mock-interview/start', ai_controller_1.startMockInterview);
-router.post('/mock-interview/:sessionId/answer', ai_controller_1.submitAnswer);
+// NOTE: the literal '/history' and '/feedback' routes MUST stay above the
+// '/:sessionId' route, otherwise Express would match them as a session id.
 router.get('/mock-interview/history', ai_controller_1.getMockHistory);
 router.post('/mock-interview/feedback', ai_controller_1.saveInterviewFeedback);
+router.post('/mock-interview/start', rateLimiter_1.aiLimiter, ai_controller_1.startMockInterview);
+router.post('/mock-interview/:sessionId/answer', rateLimiter_1.aiLimiter, ai_controller_1.submitAnswer);
+router.post('/mock-interview/:sessionId/finish', rateLimiter_1.aiLimiter, ai_controller_1.finishInterview);
+router.get('/mock-interview/:sessionId', ai_controller_1.getInterviewReport);
 
 // Skill Gap Analytics
 router.get('/skill-gaps', ai_controller_1.getSkillGaps);

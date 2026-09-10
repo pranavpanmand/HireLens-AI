@@ -1,9 +1,9 @@
 import { useState } from "react";
 import { Link, useLocation } from "react-router-dom";
-import { 
-  LayoutDashboard, User, Video, Target, FileText, Briefcase, 
-  Bookmark, Send, ChevronDown, ChevronRight, Mic, 
-  FileEdit, Linkedin, MessageSquare, Star 
+import {
+  LayoutDashboard, User, Video, Target, FileText, Briefcase,
+  Bookmark, Send, ChevronDown, ChevronRight, Mic,
+  FileEdit, Linkedin, MessageSquare, Star, History, FileBarChart, Bot
 } from "lucide-react";
 import { motion, AnimatePresence } from "framer-motion";
 import { useAuth } from "@/contexts/AuthContext";
@@ -11,7 +11,7 @@ import { useAuth } from "@/contexts/AuthContext";
 export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
   const location = useLocation();
   const { user, hasRole } = useAuth();
-  const [expandedMenus, setExpandedMenus] = useState({ aiTools: true });
+  const [expandedMenus, setExpandedMenus] = useState({ aiTools: true, interviewCoach: true });
 
   // Only render for students
   if (!user || !hasRole("student")) return null;
@@ -57,11 +57,21 @@ export const Sidebar = ({ isMobileOpen, setIsMobileOpen }) => {
       ]
     },
     {
+      title: "AI Interview Coach",
+      key: "interviewCoach",
+      expandable: true,
+      items: [
+        { icon: Bot, label: "Interview Home", href: "/interview" },
+        { icon: Mic, label: "Start Mock Interview", href: "/interview/start" },
+        { icon: History, label: "Interview History", href: "/interview/history" },
+        { icon: FileBarChart, label: "Interview Reports", href: "/interview/reports" },
+      ]
+    },
+    {
       title: "AI Tools",
       key: "aiTools",
       expandable: true,
       items: [
-        { icon: Mic, label: "Mock Interview", href: "/mock-interview" },
         { icon: FileEdit, label: "Resume Analyzer", href: "/resume-analyzer" },
         { icon: FileEdit, label: "Resume Builder", href: "/resume-generator" },
         { icon: FileText, label: "Cover Letter", href: "/cover-letter" },

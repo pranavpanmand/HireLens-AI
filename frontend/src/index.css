@@ -6,9 +6,11 @@
 
 @layer base {
   :root {
-    --background: 210 20% 98%;
+    /* Slightly cooler and darker background to make white cards pop */
+    --background: 210 25% 95%;
     --foreground: 215 25% 15%;
 
+    /* Pure white for cards */
     --card: 0 0% 100%;
     --card-foreground: 215 25% 15%;
 

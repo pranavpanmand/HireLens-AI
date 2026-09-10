@@ -10,7 +10,7 @@ const coverLetterSchema = new mongoose.Schema({
     jobId: {
         type: mongoose.Schema.Types.ObjectId,
         ref: 'JobPosting',
-        required: true
+        required: false
     },
     coverLetter: {
         type: String,

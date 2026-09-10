@@ -102,6 +102,68 @@ const generateCoverLetterHandler = async (req, res, next) => {
 };
 exports.generateCoverLetterHandler = generateCoverLetterHandler;
 
+// ========================= TAILORED RESUME GENERATOR =========================
+const generateTailoredResumeHandler = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const { jobId, jobTitle, company, jobDescription, resumeId } = req.body;
+
+        let resume;
+        if (resumeId) {
+            resume = await Resume_1.Resume.findOne({ _id: resumeId, userId });
+        } else {
+            resume = await Resume_1.Resume.findOne({ userId, isPrimary: true });
+            if (!resume) resume = await Resume_1.Resume.findOne({ userId });
+        }
+
+        if (!resume || !resume.parsedText) {
+            throw new errorHandler_1.AppError('No resume found. Please upload a resume first.', 404);
+        }
+
+        let targetTitle = jobTitle;
+        let targetCompany = company;
+        let targetDescription = jobDescription;
+        let validJobId = null;
+
+        if (jobId && mongoose.Types.ObjectId.isValid(jobId)) {
+            const job = await JobPosting_1.JobPosting.findById(jobId).lean();
+            if (job) {
+                targetTitle = targetTitle || job.title;
+                targetCompany = targetCompany || job.company;
+                targetDescription = targetDescription || job.description;
+                validJobId = job._id;
+            }
+        }
+
+        if (!targetTitle || !targetDescription) {
+            throw new errorHandler_1.AppError('Job Title and Job Description are required', 400);
+        }
+
+        const result = await (0, ai_service_1.generateTailoredResume)(
+            resume.parsedText, 
+            targetDescription, 
+            targetTitle, 
+            targetCompany || 'Target Company'
+        );
+        
+        // Save to DB
+        const { GeneratedResume } = require("../models/GeneratedResume");
+        const tailoredResume = await GeneratedResume.create({
+            userId,
+            jobId: validJobId,
+            originalResumeId: resume._id,
+            targetRole: targetTitle,
+            targetCompany: targetCompany,
+            content: result.content
+        });
+
+        res.json({ success: true, data: tailoredResume });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.generateTailoredResumeHandler = generateTailoredResumeHandler;
+
 // ========================= LINKEDIN OPTIMIZER =========================
 const generateLinkedInProfileHandler = async (req, res, next) => {
     try {
@@ -195,7 +257,7 @@ exports.generateStarStoriesHandler = generateStarStoriesHandler;
 const startMockInterview = async (req, res, next) => {
     try {
         const userId = req.user.id;
-        const { jobId, jobTitle, company, jobDescription } = req.body;
+        const { jobId, jobTitle, company, jobDescription, interviewType, difficulty, numberOfQuestions, source } = req.body;
 
         let title = jobTitle || "Target Position";
         let companyName = company || "Target Company";
@@ -212,13 +274,17 @@ const startMockInterview = async (req, res, next) => {
             }
         }
 
-        const { questions } = await (0, ai_service_1.generateMockQuestions)(description, title);
+        const { questions } = await (0, ai_service_1.generateMockQuestions)(description, title, interviewType, difficulty, numberOfQuestions || 5);
 
         const session = await MockInterviewSession.create({
             userId,
             jobId: validJobId,
             jobTitle: title,
             company: companyName,
+            interviewType: interviewType || 'Mixed',
+            difficulty: difficulty || 'Mid-Level',
+            numberOfQuestions: numberOfQuestions || 5,
+            source: source || 'General',
             questions: questions.map(q => ({
                 question: q.question,
                 category: q.category,
@@ -263,16 +329,27 @@ const submitAnswer = async (req, res, next) => {
              session.answers.push(answerObj);
         }
 
-        // Calculate overall score if all questions answered
+        // Calculate overall score and generate summary if all questions answered
         const answeredCount = session.answers.length;
+        let summaryResult = null;
         if (answeredCount === session.questions.length) {
             session.overallScore = Math.round(
                 session.answers.reduce((sum, a) => sum + (a?.score || 0), 0) / session.questions.length
             );
+            
+            // Format transcript for summary generation
+            const transcript = session.answers.map(a => ({
+                question: session.questions[a.questionIndex].question,
+                userAnswer: a.userAnswer,
+                score: a.score
+            }));
+            
+            summaryResult = await (0, ai_service_1.generateInterviewSummary)(transcript, job?.description || session.company);
+            session.summary = summaryResult;
         }
         await session.save();
 
-        res.json({ success: true, data: { evaluation, answeredCount, totalQuestions: session.questions.length } });
+        res.json({ success: true, data: { evaluation, answeredCount, totalQuestions: session.questions.length, summary: summaryResult } });
     } catch (error) {
         next(error);
     }
@@ -290,10 +367,15 @@ const getMockHistory = async (req, res, next) => {
             id: session._id,
             jobTitle: session.jobTitle,
             company: session.company,
+            interviewType: session.interviewType,
+            difficulty: session.difficulty,
             questionsCount: session.questions.length,
             answeredCount: session.answers.length,
             overallScore: session.overallScore || null,
-            createdAt: session.createdAt
+            createdAt: session.createdAt,
+            summary: session.summary || null,
+            answers: session.answers || [],
+            questions: session.questions || []
         }));
         res.json({ success: true, data: sessions });
     } catch (error) {
@@ -353,3 +435,27 @@ const chat = async (req, res, next) => {
     }
 };
 exports.chat = chat;
+
+// ========================= MOCK INTERVIEW FEEDBACK =========================
+const saveInterviewFeedback = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const { sessionId, rating, goals, improvements, comments } = req.body;
+        
+        const { InterviewFeedback } = require("../models/InterviewFeedback");
+        
+        const feedback = await InterviewFeedback.create({
+            userId,
+            sessionId,
+            rating,
+            goals: goals || [],
+            improvements: improvements || [],
+            comments
+        });
+
+        res.json({ success: true, data: feedback });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.saveInterviewFeedback = saveInterviewFeedback;

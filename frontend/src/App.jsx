@@ -11,8 +11,10 @@ import JobDetails from "./pages/JobDetails";
 import Dashboard from "./pages/Dashboard";
 import Profile from "./pages/Profile";
 import ResumeAnalyzer from "./pages/ResumeAnalyzer";
+import ResumeGenerator from "./pages/ResumeGenerator";
 import CoverLetterGenerator from "./pages/CoverLetterGenerator";
 import MockInterviewPage from "./pages/MockInterviewPage";
+import MockInterviewHistory from "./pages/MockInterviewHistory";
 import LinkedInOptimizer from "./pages/LinkedInOptimizer";
 import NetworkingGenerator from "./pages/NetworkingGenerator";
 import StarStories from "./pages/StarStories";
@@ -30,12 +32,20 @@ import NotFound from "./pages/NotFound";
 import AboutUs from "./pages/AboutUs";
 import Contact from "./pages/Contact";
 import PrivacyPolicy from "./pages/PrivacyPolicy";
+import Tutorials from "./pages/Tutorials";
+import PositionAI from "./pages/PositionAI";
+import Documents from "./pages/Documents";
+import VideoResume from "./pages/VideoResume";
+import AptitudeQuest from "./pages/AptitudeQuest";
+import PersonalityTest from "./pages/PersonalityTest";
+import Events from "./pages/Events";
 
 import { useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
 import { PageTransition } from "@/components/layout/PageTransition";
 import { AnimatedBackground } from "@/components/layout/AnimatedBackground";
 import { CustomCursor } from "@/components/ui/CustomCursor";
+import { AppLayout } from "@/components/layout/AppLayout";
 
 const AnimatedRoutes = () => {
   const location = useLocation();
@@ -43,88 +53,34 @@ const AnimatedRoutes = () => {
     <AnimatePresence mode="wait">
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
-        <Route path="/jobs" element={<PageTransition><Jobs /></PageTransition>} />
-        <Route path="/jobs/:id" element={<PageTransition><JobDetails /></PageTransition>} />
-        <Route
-          path="/dashboard"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <PageTransition><Dashboard /></PageTransition>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/profile"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <PageTransition><Profile /></PageTransition>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/resume-analyzer"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <PageTransition><ResumeAnalyzer /></PageTransition>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/cover-letter"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <PageTransition><CoverLetterGenerator /></PageTransition>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/mock-interview"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <PageTransition><MockInterviewPage /></PageTransition>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/linkedin-optimizer"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <PageTransition><LinkedInOptimizer /></PageTransition>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/networking"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <PageTransition><NetworkingGenerator /></PageTransition>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/star-stories"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <PageTransition><StarStories /></PageTransition>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/saved-jobs"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <PageTransition><SavedJobs /></PageTransition>
-            </ProtectedRoute>
-          }
-        />
-        <Route
-          path="/applications"
-          element={
-            <ProtectedRoute requiredRole="student">
-              <PageTransition><MyApplications /></PageTransition>
-            </ProtectedRoute>
-          }
-        />
+        
+        {/* Student Routes with AppLayout */}
+        <Route element={
+          <ProtectedRoute requiredRole="student">
+            <AppLayout />
+          </ProtectedRoute>
+        }>
+          <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
+          <Route path="/jobs" element={<PageTransition><Jobs /></PageTransition>} />
+          <Route path="/jobs/:id" element={<PageTransition><JobDetails /></PageTransition>} />
+          <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
+          <Route path="/resume-analyzer" element={<PageTransition><ResumeAnalyzer /></PageTransition>} />
+          <Route path="/cover-letter" element={<PageTransition><CoverLetterGenerator /></PageTransition>} />
+          <Route path="/resume-generator" element={<PageTransition><ResumeGenerator /></PageTransition>} />
+          <Route path="/mock-interview" element={<PageTransition><MockInterviewPage /></PageTransition>} />
+          <Route path="/mock-interview/history" element={<PageTransition><MockInterviewHistory /></PageTransition>} />
+          <Route path="/linkedin-optimizer" element={<PageTransition><LinkedInOptimizer /></PageTransition>} />
+          <Route path="/networking" element={<PageTransition><NetworkingGenerator /></PageTransition>} />
+          <Route path="/star-stories" element={<PageTransition><StarStories /></PageTransition>} />
+          <Route path="/saved-jobs" element={<PageTransition><SavedJobs /></PageTransition>} />
+          <Route path="/applications" element={<PageTransition><MyApplications /></PageTransition>} />
+          <Route path="/position-ai" element={<PageTransition><PositionAI /></PageTransition>} />
+          <Route path="/documents" element={<PageTransition><Documents /></PageTransition>} />
+          <Route path="/video-resume" element={<PageTransition><VideoResume /></PageTransition>} />
+          <Route path="/aptitude-quest" element={<PageTransition><AptitudeQuest /></PageTransition>} />
+          <Route path="/personality-test" element={<PageTransition><PersonalityTest /></PageTransition>} />
+          <Route path="/events" element={<PageTransition><Events /></PageTransition>} />
+        </Route>
         <Route
           path="/recruiter"
           element={
@@ -149,6 +105,7 @@ const AnimatedRoutes = () => {
         <Route path="/about" element={<PageTransition><AboutUs /></PageTransition>} />
         <Route path="/contact" element={<PageTransition><Contact /></PageTransition>} />
         <Route path="/privacy" element={<PageTransition><PrivacyPolicy /></PageTransition>} />
+        <Route path="/tutorials" element={<PageTransition><Tutorials /></PageTransition>} />
         <Route path="*" element={<PageTransition><NotFound /></PageTransition>} />
       </Routes>
     </AnimatePresence>

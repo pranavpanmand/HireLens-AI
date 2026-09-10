@@ -139,8 +139,8 @@ export const HeroSection = () => {
               className="relative rounded-2xl overflow-hidden shadow-2xl border border-white/10 aspect-video lg:aspect-square max-h-[500px]"
             >
               <img 
-                src="https://images.unsplash.com/photo-1522071820081-009f0129c71c?auto=format&fit=crop&w=1200&q=80" 
-                alt="Professionals working together" 
+                src="/hero_image.jpg" 
+                alt="AI Career Platform" 
                 className="w-full h-full object-cover scale-110"
               />
               <div className="absolute inset-0 bg-gradient-to-t from-background/80 via-transparent to-transparent" />

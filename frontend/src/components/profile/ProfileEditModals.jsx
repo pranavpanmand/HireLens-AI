@@ -2,7 +2,17 @@ import { useState, useEffect } from "react";
 import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogFooter } from "@/components/ui/dialog";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
-import { useUpdateBasicInfo, useUpdatePreferences, useUpdateSkills } from "@/hooks/useProfile";
+import { 
+  useUpdateBasicInfo, 
+  useUpdatePreferences, 
+  useUpdateSkills,
+  useUpdateEducation, 
+  useUpdateExperience, 
+  useUpdateProjects,
+  useUpdateSummary, 
+  useUpdateLanguages, 
+  useUpdateAccomplishments 
+} from "@/hooks/useProfile";
 import { useJobAlerts, useToggleJobAlerts } from "@/hooks/useJobAlerts";
 import { toast } from "sonner";
 import { X } from "lucide-react";
@@ -87,7 +97,11 @@ export function CareerPreferencesModal({ profile, isOpen, onClose }) {
 
   useEffect(() => {
     if (profile?.careerPreferences) {
-      setFormData(profile.careerPreferences);
+      setFormData({
+        preferredJobType: profile.careerPreferences.jobType || "Full-time",
+        availability: profile.careerPreferences.availability || "Immediate",
+        preferredLocation: profile.careerPreferences.locations?.[0] || "Any"
+      });
     }
   }, [profile, isOpen]);
 
@@ -239,7 +253,6 @@ export function SkillsModal({ profile, isOpen, onClose }) {
   );
 }
 
-import { useUpdateEducation, useUpdateExperience, useUpdateProjects } from "@/hooks/useProfile";
 
 export function EducationModal({ profile, isOpen, onClose }) {
   const [education, setEducation] = useState([]);
@@ -465,7 +478,6 @@ export function ProjectsModal({ profile, isOpen, onClose }) {
   );
 }
 
-import { useUpdateSummary, useUpdateLanguages, useUpdateAccomplishments } from "@/hooks/useProfile";
 
 export function SummaryModal({ profile, isOpen, onClose }) {
   const [summary, setSummary] = useState("");

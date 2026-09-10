@@ -9,7 +9,7 @@ const MockInterviewSessionSchema = new mongoose.Schema({
   jobId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'JobPosting',
-    required: true,
+    required: false,
   },
   jobTitle: {
     type: String,
@@ -18,6 +18,22 @@ const MockInterviewSessionSchema = new mongoose.Schema({
   company: {
     type: String,
     required: true,
+  },
+  interviewType: {
+    type: String,
+    default: 'Mixed',
+  },
+  difficulty: {
+    type: String,
+    default: 'Mid-Level',
+  },
+  numberOfQuestions: {
+    type: Number,
+    default: 5,
+  },
+  source: {
+    type: String,
+    default: 'General',
   },
   questions: [{
     question: String,
@@ -34,6 +50,15 @@ const MockInterviewSessionSchema = new mongoose.Schema({
     type: Number,
     default: null
   },
+  summary: {
+    narrative: String,
+    categoryScores: {
+      technical: Number,
+      communication: Number,
+      confidence: Number
+    },
+    topImprovements: [String]
+  }
 }, { timestamps: true });
 
 MockInterviewSessionSchema.index({ userId: 1, createdAt: -1 });

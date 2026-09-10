@@ -7,7 +7,7 @@ import { Briefcase, Menu, X, User, LogIn, LogOut, Building2 } from "lucide-react
 import { useAuth } from "@/contexts/AuthContext";
 import { useProfile } from "@/hooks/useProfile";
 
-export const Navbar = () => {
+export const Navbar = ({ onMenuClick }) => {
   const [isOpen, setIsOpen] = useState(false);
   const [isScrolled, setIsScrolled] = useState(false);
   const location = useLocation();
@@ -43,6 +43,7 @@ export const Navbar = () => {
   }, []);
 
   const navLinks = [
+    { href: "/tutorials", label: "Tutorials" },
     ...(user && hasRole("student") ? [
       { href: "/dashboard", label: "Dashboard" },
       { href: "/jobs", label: "Browse Jobs" },
@@ -77,39 +78,31 @@ export const Navbar = () => {
 
         <div className="px-6 relative">
           <div className="flex items-center justify-between h-16">
-            {/* Logo */}
-            <Link to="/" className="flex items-center gap-2 group">
-              <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-soft group-hover:shadow-card transition-shadow relative overflow-hidden">
-                {/* Shimmer effect */}
-                <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer" />
-                <Briefcase className="w-4 h-4 text-primary-foreground relative z-10" />
-              </div>
-              <span className="font-display font-bold text-lg text-foreground">
-                HireLens<span className="text-secondary">AI</span>
-              </span>
-            </Link>
-
-          {/* Desktop Navigation */}
-          <div className="hidden md:flex items-center gap-2 lg:gap-4">
-            {navLinks.map((link) =>
-            <Link
-              key={link.href}
-              to={link.href}
-              className={`text-sm font-medium transition-all duration-300 relative group py-2 px-4 rounded-full ${
-              isActive(link.href) ?
-              "text-primary bg-primary/10 shadow-sm" :
-              "text-muted-foreground hover:text-foreground hover:bg-muted/60"}`}
-            >
-              {link.label}
-              {isActive(link.href) && (
-                <motion.div 
-                  layoutId="navbar-indicator"
-                  className="absolute inset-0 rounded-full border border-primary/20 bg-primary/5 -z-10"
-                  transition={{ type: "spring", bounce: 0.25, duration: 0.5 }}
-                />
+            {/* Logo & Mobile Menu Toggle */}
+            <div className="flex items-center gap-4">
+              {user && hasRole("student") && (
+                <button 
+                  onClick={onMenuClick}
+                  className="lg:hidden p-2 -ml-2 rounded-lg hover:bg-muted/60 transition-colors"
+                >
+                  <Menu className="w-5 h-5 text-foreground" />
+                </button>
               )}
-            </Link>
-            )}
+              <Link to="/" className="flex items-center gap-2 group">
+                <div className="w-8 h-8 rounded-lg bg-gradient-primary flex items-center justify-center shadow-soft group-hover:shadow-card transition-shadow relative overflow-hidden">
+                  {/* Shimmer effect */}
+                  <div className="absolute inset-0 -translate-x-full bg-gradient-to-r from-transparent via-white/20 to-transparent group-hover:animate-shimmer" />
+                  <Briefcase className="w-4 h-4 text-primary-foreground relative z-10" />
+                </div>
+                <span className="font-display font-bold text-lg text-foreground">
+                  HireLens<span className="text-secondary">AI</span>
+                </span>
+              </Link>
+            </div>
+
+          {/* Desktop Navigation (Moved to Sidebar) */}
+          <div className="hidden md:flex items-center gap-2 lg:gap-4">
+             {/* Secondary/Explore links can go here in the future */}
           </div>
 
           {/* Auth Buttons */}

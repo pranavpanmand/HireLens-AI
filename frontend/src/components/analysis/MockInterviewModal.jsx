@@ -3,6 +3,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import { X, Mic, MicOff, Volume2, VolumeX, Send, Loader2, CheckCircle2, AlertTriangle, MessageSquare, Play, PlayCircle, Lightbulb as LightbulbIcon } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useStartMockInterview, useSubmitAnswer } from "@/hooks/useMockInterview";
+import { FeedbackModal } from "./FeedbackModal";
 import { toast } from "sonner";
 
 export function MockInterviewModal({ job, onClose }) {
@@ -11,6 +12,8 @@ export function MockInterviewModal({ job, onClose }) {
   const [answer, setAnswer] = useState("");
   const [feedback, setFeedback] = useState(null);
   const [isFinished, setIsFinished] = useState(false);
+  const [interviewSummary, setInterviewSummary] = useState(null);
+  const [showFeedbackModal, setShowFeedbackModal] = useState(false);
 
   const [isListening, setIsListening] = useState(false);
   const [isSpeaking, setIsSpeaking] = useState(false);
@@ -27,12 +30,25 @@ export function MockInterviewModal({ job, onClose }) {
       recognitionRef.current.continuous = true;
       recognitionRef.current.interimResults = true;
 
+      let finalTranscript = '';
+
+      recognitionRef.current.onstart = () => {
+         finalTranscript = '';
+      };
+
       recognitionRef.current.onresult = (event) => {
-        let transcript = '';
+        let interimTranscript = '';
         for (let i = event.resultIndex; i < event.results.length; i++) {
-          transcript += event.results[i][0].transcript;
+          const transcript = event.results[i][0].transcript;
+          if (event.results[i].isFinal) {
+            finalTranscript += transcript + ' ';
+          } else {
+            interimTranscript += transcript;
+          }
         }
-        setAnswer(prev => prev ? `${prev} ${transcript}` : transcript);
+        setAnswer(prev => {
+            return (window.initialAnswerForRec || '') + finalTranscript + interimTranscript;
+        });
       };
 
       recognitionRef.current.onerror = (event) => {
@@ -75,6 +91,7 @@ export function MockInterviewModal({ job, onClose }) {
       recognitionRef.current.stop();
       setIsListening(false);
     } else {
+      window.initialAnswerForRec = answer; // Store current text before speaking
       recognitionRef.current.start();
       setIsListening(true);
       toast.info("Listening... Speak your answer now.");
@@ -110,6 +127,9 @@ export function MockInterviewModal({ job, onClose }) {
         answer
       });
       setFeedback(result.evaluation);
+      if (result.summary) {
+        setInterviewSummary(result.summary);
+      }
     } catch (err) {
       toast.error(err.message || "Failed to submit answer");
     }
@@ -250,7 +270,7 @@ export function MockInterviewModal({ job, onClose }) {
                     <textarea
                       value={answer}
                       onChange={(e) => setAnswer(e.target.value)}
-                      placeholder="Speak your answer using the mic button below, or type here..."
+                      placeholder="Speak your answer using the mic button, or type your answer here if speech recognition is unavailable..."
                       className="w-full h-48 p-4 rounded-xl border border-border bg-background focus:ring-2 focus:ring-primary/50 resize-none pr-12 text-base"
                     />
                     <Button
@@ -342,21 +362,119 @@ export function MockInterviewModal({ job, onClose }) {
           )}
 
           {isFinished && (
-            <div className="flex flex-col items-center justify-center h-full text-center py-12">
-              <div className="w-20 h-20 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mb-6">
-                <CheckCircle2 className="w-10 h-10 text-green-600 dark:text-green-400" />
+            <div className="flex flex-col items-center justify-start h-full py-6 space-y-6">
+              <div className="text-center">
+                <div className="w-16 h-16 bg-green-100 dark:bg-green-900 rounded-full flex items-center justify-center mx-auto mb-4">
+                  <CheckCircle2 className="w-8 h-8 text-green-600 dark:text-green-400" />
+                </div>
+                <h3 className="text-2xl font-bold mb-2">Interview Complete!</h3>
+                <p className="text-muted-foreground">Here is your detailed performance summary.</p>
               </div>
-              <h3 className="text-2xl font-bold mb-4">Interview Complete!</h3>
-              <p className="text-muted-foreground max-w-md mb-8">
-                Great job practicing. You can review all your answers and feedback in your dashboard.
-              </p>
-              <Button size="lg" onClick={onClose} className="px-8">
-                Return to Job
+
+              {interviewSummary ? (
+                <div className="w-full space-y-6">
+                  {/* Narrative */}
+                  <div className="bg-card border border-border p-5 rounded-xl">
+                    <h4 className="font-semibold text-lg mb-3">Overall Performance</h4>
+                    <p className="text-muted-foreground leading-relaxed">{interviewSummary.narrative}</p>
+                  </div>
+
+                  {/* Category Scores */}
+                  <div className="grid grid-cols-3 gap-4">
+                    <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl text-center">
+                      <div className="text-sm text-muted-foreground font-medium mb-1">Technical</div>
+                      <div className="text-3xl font-bold text-primary">{interviewSummary.categoryScores?.technical}/10</div>
+                    </div>
+                    <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl text-center">
+                      <div className="text-sm text-muted-foreground font-medium mb-1">Communication</div>
+                      <div className="text-3xl font-bold text-primary">{interviewSummary.categoryScores?.communication}/10</div>
+                    </div>
+                    <div className="bg-primary/5 border border-primary/20 p-4 rounded-xl text-center">
+                      <div className="text-sm text-muted-foreground font-medium mb-1">Confidence</div>
+                      <div className="text-3xl font-bold text-primary">{interviewSummary.categoryScores?.confidence}/10</div>
+                    </div>
+                  </div>
+
+                  {/* Strengths & Weaknesses */}
+                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                    <div className="bg-green-50 dark:bg-green-950/20 border border-green-100 dark:border-green-900 p-5 rounded-xl">
+                      <h4 className="font-semibold text-green-800 dark:text-green-300 mb-3 flex items-center gap-2">
+                        <CheckCircle2 className="w-5 h-5" /> What You Did Well
+                      </h4>
+                      <ul className="space-y-2">
+                        {interviewSummary.strengths?.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-green-700 dark:text-green-400">
+                            <span className="font-bold mt-0.5">•</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+
+                    <div className="bg-orange-50 dark:bg-orange-950/20 border border-orange-100 dark:border-orange-900 p-5 rounded-xl">
+                      <h4 className="font-semibold text-orange-800 dark:text-orange-300 mb-3 flex items-center gap-2">
+                        <AlertTriangle className="w-5 h-5" /> What Needs Improvement
+                      </h4>
+                      <ul className="space-y-2">
+                        {interviewSummary.weaknesses?.map((item, idx) => (
+                          <li key={idx} className="flex items-start gap-2 text-orange-700 dark:text-orange-400">
+                            <span className="font-bold mt-0.5">•</span>
+                            <span>{item}</span>
+                          </li>
+                        ))}
+                      </ul>
+                    </div>
+                  </div>
+
+                  {/* Weakest Answers Analysis */}
+                  {interviewSummary.weakestAnswers && interviewSummary.weakestAnswers.length > 0 && (
+                    <div className="space-y-4 pt-4 border-t border-border">
+                      <h4 className="font-semibold text-lg flex items-center gap-2">
+                        <MessageSquare className="w-5 h-5 text-primary" /> Key Answers to Improve
+                      </h4>
+                      {interviewSummary.weakestAnswers.map((item, idx) => (
+                        <div key={idx} className="bg-card border border-border p-5 rounded-xl space-y-4">
+                          <div>
+                            <span className="text-sm text-muted-foreground font-semibold">Question:</span>
+                            <p className="font-medium mt-1">{item.originalQuestion}</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-muted-foreground font-semibold">Your Answer:</span>
+                            <p className="text-muted-foreground mt-1 text-sm bg-muted/50 p-3 rounded-lg italic">"{item.userAnswer}"</p>
+                          </div>
+                          <div>
+                            <span className="text-sm text-green-600 dark:text-green-400 font-semibold flex items-center gap-1"><CheckCircle2 className="w-4 h-4" /> Better Example:</span>
+                            <p className="text-foreground/90 mt-1 text-sm bg-green-50/50 dark:bg-green-950/10 border border-green-100 dark:border-green-900/50 p-3 rounded-lg">
+                              {item.betterAnswer}
+                            </p>
+                          </div>
+                        </div>
+                      ))}
+                    </div>
+                  )}
+                </div>
+              ) : (
+                <div className="flex items-center justify-center py-10">
+                  <Loader2 className="w-8 h-8 animate-spin text-primary mr-3" />
+                  <span>Generating your detailed summary...</span>
+                </div>
+              )}
+
+              <Button size="lg" onClick={() => setShowFeedbackModal(true)} className="px-8 mt-4">
+                Close & Return to Dashboard
               </Button>
             </div>
           )}
         </div>
       </motion.div>
+      <FeedbackModal 
+        isOpen={showFeedbackModal} 
+        onClose={() => {
+          setShowFeedbackModal(false);
+          onClose();
+        }} 
+        sessionId={session?._id || session?.id} 
+      />
     </div>
   );
 }

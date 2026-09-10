@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { Link } from "react-router-dom";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { Button } from "@/components/ui/button";
@@ -7,7 +8,7 @@ import { Textarea } from "@/components/ui/textarea";
 import { Card, CardHeader, CardTitle, CardContent } from "@/components/ui/card";
 import { useJobs } from "@/hooks/useJobs";
 import { MockInterviewModal } from "@/components/analysis/MockInterviewModal";
-import { MessageSquare, Sparkles, Briefcase, Play } from "lucide-react";
+import { MessageSquare, Sparkles, Briefcase, Play, History } from "lucide-react";
 
 export default function MockInterviewPage() {
   const { data: jobsData } = useJobs({ page: 1, limit: 20 });
@@ -17,6 +18,10 @@ export default function MockInterviewPage() {
   const [company, setCompany] = useState("");
   const [jobDescription, setJobDescription] = useState("");
   const [selectedJobId, setSelectedJobId] = useState("");
+  const [interviewType, setInterviewType] = useState("Mixed");
+  const [difficulty, setDifficulty] = useState("Mid-Level");
+  const [numberOfQuestions, setNumberOfQuestions] = useState(5);
+  const [source, setSource] = useState("General");
 
   const [activeInterviewJob, setActiveInterviewJob] = useState(null);
 
@@ -39,7 +44,11 @@ export default function MockInterviewPage() {
       id: selectedJobId || `custom-${Date.now()}`,
       title: jobTitle,
       company: company || "Target Company",
-      description: jobDescription || `${jobTitle} position`
+      description: jobDescription || `${jobTitle} position`,
+      interviewType,
+      difficulty,
+      numberOfQuestions: Number(numberOfQuestions),
+      source
     });
   };
 
@@ -54,9 +63,14 @@ export default function MockInterviewPage() {
           <h1 className="text-3xl md:text-4xl font-display font-bold text-foreground">
             Practice Real Technical & Behavioral Interviews
           </h1>
-          <p className="text-muted-foreground mt-2 max-w-xl mx-auto">
-            Get 6 AI-generated interview questions custom tailored to your target job, submit answers, and receive instant feedback & scoring.
+          <p className="text-muted-foreground mt-2 max-w-xl mx-auto mb-6">
+            Get AI-generated interview questions custom tailored to your target job, submit answers, and receive instant feedback & scoring.
           </p>
+          <Button variant="outline" asChild>
+            <Link to="/mock-interview/history" className="gap-2">
+              <History className="w-4 h-4" /> View Past Interviews & Score Trend
+            </Link>
+          </Button>
         </div>
 
         <div className="grid grid-cols-1 md:grid-cols-12 gap-8">
@@ -160,6 +174,65 @@ export default function MockInterviewPage() {
                       value={jobDescription}
                       onChange={(e) => setJobDescription(e.target.value)}
                     />
+                  </div>
+
+                  <div className="grid grid-cols-2 gap-4">
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1 block">
+                        Interview Type
+                      </label>
+                      <select
+                        value={interviewType}
+                        onChange={(e) => setInterviewType(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="Mixed">Mixed (Default)</option>
+                        <option value="Technical">Technical Focus</option>
+                        <option value="Behavioral">Behavioral / STAR</option>
+                        <option value="HR">HR / Managerial</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1 block">
+                        Difficulty Level
+                      </label>
+                      <select
+                        value={difficulty}
+                        onChange={(e) => setDifficulty(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="Entry-Level">Entry-Level</option>
+                        <option value="Mid-Level">Mid-Level</option>
+                        <option value="Senior">Senior / Staff</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1 block">
+                        Number of Questions
+                      </label>
+                      <select
+                        value={numberOfQuestions}
+                        onChange={(e) => setNumberOfQuestions(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value={5}>5 Questions</option>
+                        <option value={10}>10 Questions</option>
+                        <option value={15}>15 Questions</option>
+                      </select>
+                    </div>
+                    <div>
+                      <label className="text-xs font-semibold text-muted-foreground mb-1 block">
+                        Source
+                      </label>
+                      <select
+                        value={source}
+                        onChange={(e) => setSource(e.target.value)}
+                        className="w-full h-10 px-3 rounded-lg border border-border bg-background text-sm focus:outline-none focus:ring-2 focus:ring-primary"
+                      >
+                        <option value="General">General Practice</option>
+                        <option value="Saved Job">Based on Saved Job</option>
+                      </select>
+                    </div>
                   </div>
 
                   <Button

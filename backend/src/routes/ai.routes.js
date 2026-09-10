@@ -11,6 +11,9 @@ router.use(auth_1.requireAuth);
 // Resume Analyzer
 router.post('/resume/analyze', rateLimiter_1.aiLimiter, ai_controller_1.analyzeResumeHandler);
 
+// Tailored Resume Generator
+router.post('/resume/generate-tailored', rateLimiter_1.aiLimiter, ai_controller_1.generateTailoredResumeHandler);
+
 // Cover Letter
 router.post('/cover-letter', rateLimiter_1.aiLimiter, ai_controller_1.generateCoverLetterHandler);
 
@@ -27,6 +30,7 @@ router.post('/star-stories', rateLimiter_1.aiLimiter, ai_controller_1.generateSt
 router.post('/mock-interview/start', ai_controller_1.startMockInterview);
 router.post('/mock-interview/:sessionId/answer', ai_controller_1.submitAnswer);
 router.get('/mock-interview/history', ai_controller_1.getMockHistory);
+router.post('/mock-interview/feedback', ai_controller_1.saveInterviewFeedback);
 
 // Skill Gap Analytics
 router.get('/skill-gaps', ai_controller_1.getSkillGaps);

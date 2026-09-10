@@ -10,7 +10,9 @@ export const useStartMockInterview = () => {
             jobId: payload?.id || payload?.jobId,
             jobTitle: payload?.title || payload?.jobTitle,
             company: payload?.company,
-            jobDescription: payload?.description || payload?.jobDescription
+            jobDescription: payload?.description || payload?.jobDescription,
+            interviewType: payload?.interviewType,
+            difficulty: payload?.difficulty
           };
 
       const response = await fetchApi("/ai/mock-interview/start", {

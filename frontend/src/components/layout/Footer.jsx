@@ -64,6 +64,7 @@ export const Footer = () => {
             <h4 className="font-display font-bold text-foreground mb-6">Company</h4>
             <ul className="space-y-4 text-sm text-muted-foreground">
               <li><Link to="/about" className="hover:text-primary transition-colors flex items-center gap-2 group"><span className="w-0 h-[1px] bg-primary group-hover:w-3 transition-all duration-300"></span>About Us</Link></li>
+              <li><Link to="/tutorials" className="hover:text-primary transition-colors flex items-center gap-2 group"><span className="w-0 h-[1px] bg-primary group-hover:w-3 transition-all duration-300"></span>Platform Tutorials</Link></li>
               <li><Link to="/contact" className="hover:text-primary transition-colors flex items-center gap-2 group"><span className="w-0 h-[1px] bg-primary group-hover:w-3 transition-all duration-300"></span>Contact</Link></li>
               <li><Link to="/privacy" className="hover:text-primary transition-colors flex items-center gap-2 group"><span className="w-0 h-[1px] bg-primary group-hover:w-3 transition-all duration-300"></span>Privacy Policy</Link></li>
             </ul>

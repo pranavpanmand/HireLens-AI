@@ -45,8 +45,13 @@ const updateBasicInfo = async (req, res, next) => {
         }, { new: true, runValidators: true });
 
         const profile = await getOrCreateProfile(userId);
-        if (github || linkedin || portfolio || careerPreferences) {
-            if (github !== undefined) profile.codingProfiles = { ...profile.codingProfiles, github };
+        if (github !== undefined || linkedin !== undefined || portfolio !== undefined || careerPreferences !== undefined) {
+            if (github !== undefined) {
+                profile.codingProfiles = { 
+                    ...(profile.codingProfiles ? (typeof profile.codingProfiles.toObject === 'function' ? profile.codingProfiles.toObject() : profile.codingProfiles) : {}), 
+                    github 
+                };
+            }
             if (linkedin !== undefined) profile.linkedinUrl = linkedin;
             if (portfolio !== undefined) profile.portfolioUrl = portfolio;
             if (careerPreferences !== undefined) profile.careerPreferences = careerPreferences;
@@ -63,11 +68,16 @@ exports.updateBasicInfo = updateBasicInfo;
 const updatePreferences = async (req, res, next) => {
     try {
         const profile = await getOrCreateProfile(req.user.id);
+        
+        const currentPrefs = profile.careerPreferences ? 
+            (typeof profile.careerPreferences.toObject === 'function' ? profile.careerPreferences.toObject() : profile.careerPreferences) 
+            : {};
+            
         profile.careerPreferences = {
-            ...profile.careerPreferences,
-            jobType: req.body.preferredJobType,
-            availability: req.body.availability,
-            locations: req.body.preferredLocation ? [req.body.preferredLocation] : []
+            ...currentPrefs,
+            jobType: req.body.jobType || req.body.preferredJobType || currentPrefs.jobType,
+            availability: req.body.availability || currentPrefs.availability,
+            locations: req.body.locations || (req.body.preferredLocation ? [req.body.preferredLocation] : currentPrefs.locations || [])
         };
         await profile.save();
         res.json({ success: true, data: profile.careerPreferences });

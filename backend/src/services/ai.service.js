@@ -2,8 +2,10 @@
 Object.defineProperty(exports, "__esModule", { value: true });
 exports.analyzeResume = analyzeResume;
 exports.generateCoverLetter = generateCoverLetter;
+exports.generateTailoredResume = generateTailoredResume;
 exports.generateMockQuestions = generateMockQuestions;
 exports.evaluateAnswer = evaluateAnswer;
+exports.generateInterviewSummary = generateInterviewSummary;
 exports.chatWithAI = chatWithAI;
 exports.analyzeMatch = analyzeMatch;
 exports.generateMatchReason = generateMatchReason;
@@ -131,35 +133,76 @@ async function generateCoverLetter(resumeText, jobDescription, jobTitle, company
 }
 
 /**
- * Generate mock interview questions based on a job description.
+ * Generate a tailored resume based on a job description.
  */
-async function generateMockQuestions(jobDescription, jobTitle) {
+async function generateTailoredResume(resumeText, jobDescription, jobTitle, company) {
+    const model = getGenAI().getGenerativeModel({
+        model: 'gemini-flash-lite-latest',
+        generationConfig: { temperature: 0.3, responseMimeType: 'application/json' },
+    });
+    const prompt = `
+    You are an expert resume writer and career coach.
+    I need you to rewrite and tailor the provided resume to perfectly match the target job description.
+
+    Original Resume:
+    ${resumeText.substring(0, 15000)}
+
+    Target Job Title: ${jobTitle}
+    Target Company: ${company}
+    Target Job Description:
+    ${jobDescription.substring(0, 5000)}
+
+    Instructions:
+    1. Reorder and rewrite bullet points to emphasize skills and experiences that match the JD.
+    2. Incorporate keywords from the JD naturally.
+    3. Do NOT invent or hallucinate any experience, metrics, or skills that are not implied by the original resume.
+    4. Format the output as a clean, highly professional Markdown document. Use appropriate headings (#, ##, ###), bold text, and bullet points.
+
+    Return JSON:
+    {
+      "content": string (The complete tailored resume in Markdown format)
+    }
+    `;
+
+    const result = await callWithRetry(() => model.generateContent(prompt));
+    return cleanJSON(result.response.text());
+}
+
+/**
+ * Generate mock interview questions based on a job description, interview type, and difficulty.
+ */
+async function generateMockQuestions(jobDescription, jobTitle, interviewType = 'Mixed', difficulty = 'Mid-Level', numberOfQuestions = 5) {
     const model = getModel();
     const prompt = `
-    You are an expert technical interviewer.
-    Generate interview questions for this position.
+    You are an expert technical recruiter and interviewer.
+    Generate interview questions tailored to the following specifications:
 
     Job Title: ${jobTitle}
-    Job Description:
+    Interview Type: ${interviewType}
+    Difficulty Level: ${difficulty}
+    
+    Job Context/Description:
     ${jobDescription.substring(0, 5000)}
+
+    Generate exactly ${numberOfQuestions} questions that strongly reflect the chosen "Interview Type" and "Difficulty Level".
+    - If Technical: Focus primarily on coding, system design, or technical concepts relevant to the JD.
+    - If Behavioral: Focus on past experiences, conflict resolution, leadership, and soft skills (STAR method).
+    - If HR/Managerial: Focus on culture fit, career goals, situational judgement, and project management.
+    - If Mixed: Provide a balanced mix of Technical, Behavioral, and Situational questions.
+
+    Make the questions appropriate for a ${difficulty} candidate (e.g., Entry-level = foundational, Senior = architectural/strategic).
 
     Return JSON:
     {
       "questions": [
         {
           "question": string,
-          "category": "technical" | "behavioral" | "situational",
+          "category": "technical" | "behavioral" | "situational" | "hr",
           "difficulty": "easy" | "medium" | "hard",
-          "tips": string (brief tip for answering well)
+          "tips": string (brief tip for answering well based on the STAR method or technical best practices)
         }
       ]
     }
-
-    Generate exactly 6 questions:
-    - 3 technical (relevant to the JD's required skills)
-    - 2 behavioral (STAR method appropriate)
-    - 1 situational
-    Mix difficulties.
     `;
 
     const result = await callWithRetry(() => model.generateContent(prompt));
@@ -190,6 +233,47 @@ async function evaluateAnswer(question, answer, jobDescription) {
       "specificity": number (0-10),
       "feedback": string (2-3 sentences of constructive feedback),
       "improvedAnswer": string (a model answer for comparison, 2-3 sentences)
+    }
+    `;
+
+    const result = await callWithRetry(() => model.generateContent(prompt));
+    return cleanJSON(result.response.text());
+}
+
+/**
+ * Generate a comprehensive summary for a completed mock interview.
+ */
+async function generateInterviewSummary(questionsAndAnswers, jobDescription) {
+    const model = getModel();
+    const prompt = `
+    You are an expert executive career coach. Review the following mock interview transcript and generate a comprehensive performance summary.
+
+    Job Context:
+    ${jobDescription.substring(0, 3000)}
+
+    Q&A Transcript:
+    ${JSON.stringify(questionsAndAnswers).substring(0, 15000)}
+
+    Generate a detailed summary analyzing the candidate's performance.
+
+    Return JSON:
+    {
+      "narrative": string (3-4 sentences summarizing overall performance),
+      "categoryScores": {
+        "technical": number (0-10, based on technical accuracy and depth),
+        "communication": number (0-10, based on clarity, structure, and brevity),
+        "confidence": number (0-10, based on assertiveness and relevance),
+        "clarity": number (0-10, based on coherence)
+      },
+      "strengths": [string] (2-3 bullet points on what they did well),
+      "weaknesses": [string] (2-3 bullet points on what needs improvement),
+      "weakestAnswers": [
+        {
+          "originalQuestion": string,
+          "userAnswer": string,
+          "betterAnswer": string (AI-generated better example answer, 2-3 sentences max)
+        }
+      ] (Array containing the 1 or 2 lowest scoring answers based on their transcript. If all answers are perfect, just provide an alternative approach for one question.)
     }
     `;
 

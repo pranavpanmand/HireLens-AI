@@ -20,6 +20,7 @@ import { cn } from "@/lib/utils";
 
 import { AiAvatar } from "@/components/interview/AiAvatar";
 import { InterviewTimer } from "@/components/interview/InterviewTimer";
+import { WebcamView } from "@/components/interview/WebcamView";
 import { useSpeech } from "@/hooks/useSpeech";
 import {
   useInterviewReport, useSubmitAnswer, useFinishInterview,
@@ -271,6 +272,9 @@ export default function InterviewSession() {
         <div className="flex md:flex-col items-center md:items-stretch gap-4">
           <div className="flex justify-center md:pt-4">
             <AiAvatar state={avatarState} />
+          </div>
+          <div className="w-24 md:w-full max-w-[200px] mx-auto hidden sm:block">
+            <WebcamView />
           </div>
           <div className="flex-1 md:flex-none flex flex-col gap-2">
             <InterviewTimer

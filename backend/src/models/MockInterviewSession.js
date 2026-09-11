@@ -62,8 +62,6 @@ const MockInterviewSessionSchema = new mongoose.Schema({
   jobId: {
     type: mongoose.Schema.Types.ObjectId,
     ref: 'JobPosting',
-    required: false,
-    default: null,
   },
   jobTitle: {
     type: String,

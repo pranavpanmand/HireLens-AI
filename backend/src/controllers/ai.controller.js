@@ -332,9 +332,8 @@ const startMockInterview = async (req, res, next) => {
             description, title, interviewType, difficulty, count
         );
 
-        const session = await MockInterviewSession.create({
+        const sessionPayload = {
             userId,
-            jobId: validJobId,
             jobTitle: title,
             company: companyName,
             // Snapshot the JD so evaluation never has to re-query JobPosting per answer.
@@ -348,7 +347,13 @@ const startMockInterview = async (req, res, next) => {
             answers: [],
             status: 'in_progress',
             startedAt: new Date(),
-        });
+        };
+
+        if (validJobId) {
+            sessionPayload.jobId = validJobId;
+        }
+
+        const session = await MockInterviewSession.create(sessionPayload);
 
         res.status(201).json({ success: true, data: serializeSession(session) });
     } catch (error) {

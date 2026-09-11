@@ -222,7 +222,7 @@ export function ChatbotWidget() {
             initial={{ opacity: 0, y: 20, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
             exit={{ opacity: 0, y: 20, scale: 0.95 }}
-            className={`fixed right-4 sm:right-6 z-50 bg-white border border-border shadow-2xl rounded-2xl overflow-hidden flex flex-col transition-all duration-300 ease-in-out ${
+            className={`fixed right-4 sm:right-6 z-50 bg-background border border-border shadow-2xl rounded-2xl overflow-hidden flex flex-col transition-all duration-300 ease-in-out ${
               isMinimized 
                 ? 'bottom-4 sm:bottom-6 w-[calc(100vw-32px)] sm:w-80 h-16' 
                 : isExpanded 
@@ -232,26 +232,26 @@ export function ChatbotWidget() {
           >
             {/* Header */}
             <div 
-              className="h-16 bg-white border-b px-4 flex items-center justify-between cursor-pointer flex-shrink-0"
+              className="h-16 bg-card border-b border-border px-4 flex items-center justify-between cursor-pointer flex-shrink-0"
               onClick={() => setIsMinimized(!isMinimized)}
             >
               <div className="flex items-center gap-3">
                 <div className="w-10 h-10 rounded-full bg-[#00A99D] flex items-center justify-center">
                   <MessageSquare className="w-5 h-5 text-white" />
                 </div>
-                <span className="font-semibold text-gray-800 text-lg">HireLens Career Bot</span>
+                <span className="font-semibold text-card-foreground text-lg">HireLens Career Bot</span>
               </div>
-              <div className="flex items-center gap-2 text-gray-500">
-                <button onClick={(e) => { e.stopPropagation(); resetChat(); }} className="p-1.5 hover:bg-gray-100 rounded-lg">
+              <div className="flex items-center gap-2 text-muted-foreground">
+                <button onClick={(e) => { e.stopPropagation(); resetChat(); }} className="p-1.5 hover:bg-muted hover:text-foreground rounded-lg">
                   <RefreshCw className="w-4 h-4" />
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); setIsMinimized(false); }} className="p-1.5 hover:bg-gray-100 rounded-lg hidden sm:block">
+                <button onClick={(e) => { e.stopPropagation(); setIsExpanded(!isExpanded); setIsMinimized(false); }} className="p-1.5 hover:bg-muted hover:text-foreground rounded-lg hidden sm:block">
                   {isExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }} className="p-1.5 hover:bg-gray-100 rounded-lg">
+                <button onClick={(e) => { e.stopPropagation(); setIsMuted(!isMuted); }} className="p-1.5 hover:bg-muted hover:text-foreground rounded-lg">
                   {isMuted ? <VolumeX className="w-4 h-4" /> : <Volume2 className="w-4 h-4" />}
                 </button>
-                <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); setIsMinimized(false); }} className="p-1.5 hover:bg-gray-100 rounded-lg">
+                <button onClick={(e) => { e.stopPropagation(); setIsOpen(false); setIsMinimized(false); }} className="p-1.5 hover:bg-muted hover:text-foreground rounded-lg">
                   <X className="w-5 h-5" />
                 </button>
               </div>
@@ -265,7 +265,7 @@ export function ChatbotWidget() {
                     
                     {/* Timestamp Divider */}
                     <div className="flex justify-center my-2">
-                      <span className="text-xs text-gray-400">
+                      <span className="text-xs text-muted-foreground">
                         Today {new Date().toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' })}
                       </span>
                     </div>
@@ -279,7 +279,7 @@ export function ChatbotWidget() {
                           className={`max-w-[85%] rounded-2xl px-4 py-3 shadow-sm ${
                             msg.role === 'user' 
                               ? 'bg-gradient-to-r from-[#172554] to-[#00A99D] text-white rounded-tr-sm' 
-                              : 'bg-white text-gray-800 rounded-tl-sm border border-gray-100'
+                              : 'bg-card text-card-foreground rounded-tl-sm border border-border shadow-sm'
                           }`}
                         >
                           {msg.role === 'user' ? (
@@ -309,9 +309,9 @@ export function ChatbotWidget() {
                               {msg.type === 'job_results' && msg.jobs && (
                                 <div className="mt-3 flex flex-col gap-2">
                                   {msg.jobs.map(job => (
-                                    <a key={job.id} href={`/jobs/${job.id}`} target="_blank" rel="noreferrer" className="block p-3 border rounded-lg hover:border-[#00A99D] bg-gray-50 transition-colors text-left">
-                                      <div className="font-semibold text-gray-900 truncate">{job.title}</div>
-                                      <div className="text-xs text-gray-500 truncate">{job.company} • {job.location}</div>
+                                    <a key={job.id} href={`/jobs/${job.id}`} target="_blank" rel="noreferrer" className="block p-3 border rounded-lg hover:border-[#00A99D] bg-muted/50 transition-colors text-left">
+                                      <div className="font-semibold text-foreground truncate">{job.title}</div>
+                                      <div className="text-xs text-muted-foreground truncate">{job.company} • {job.location}</div>
                                     </a>
                                   ))}
                                 </div>
@@ -327,7 +327,7 @@ export function ChatbotWidget() {
                               <button
                                 key={i}
                                 onClick={() => handleOptionClick(opt)}
-                                className="text-sm px-4 py-2 rounded-full border border-gray-200 bg-white hover:border-[#00A99D] hover:text-[#00A99D] transition-colors shadow-sm text-gray-700"
+                                className="text-sm px-4 py-2 rounded-full border border-border bg-white hover:border-[#00A99D] hover:text-[#00A99D] transition-colors shadow-sm text-foreground"
                               >
                                 {opt}
                               </button>
@@ -339,7 +339,7 @@ export function ChatbotWidget() {
                     
                     {isLoading && (
                       <div className="flex items-start">
-                        <div className="bg-white border border-gray-100 text-gray-500 rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-2">
+                        <div className="bg-white border border-gray-100 text-muted-foreground rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-[#00A99D]" />
                           <span className="text-sm">Typing...</span>
                         </div>
@@ -358,7 +358,7 @@ export function ChatbotWidget() {
                 </ScrollArea>
 
                 {/* Input Area */}
-                <div className="p-4 bg-white border-t flex-shrink-0 relative z-30">
+                <div className="p-4 bg-card border-t border-border flex-shrink-0 relative z-30">
                   
                   {/* Quick Actions Menu (Popup) */}
                   <AnimatePresence>
@@ -367,25 +367,25 @@ export function ChatbotWidget() {
                         initial={{ opacity: 0, y: 10 }}
                         animate={{ opacity: 1, y: 0 }}
                         exit={{ opacity: 0, y: 10 }}
-                        className="absolute bottom-[calc(100%+8px)] left-4 bg-white border shadow-lg rounded-xl overflow-hidden z-40 w-64"
+                        className="absolute bottom-[calc(100%+8px)] left-4 bg-popover border-border text-popover-foreground shadow-lg rounded-xl overflow-hidden z-40 w-64"
                       >
-                        <button onClick={() => handleAction('question')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left border-b">
-                          <MessageSquare className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm text-gray-700 font-medium">Ask a Question</span>
+                        <button onClick={() => handleAction('question')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 text-left border-b">
+                          <MessageSquare className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground font-medium">Ask a Question</span>
                         </button>
-                        <button onClick={() => handleAction('search')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left border-b">
-                          <Search className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm text-gray-700 font-medium">Guided Job Search</span>
+                        <button onClick={() => handleAction('search')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 text-left border-b">
+                          <Search className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground font-medium">Guided Job Search</span>
                         </button>
-                        <button onClick={() => handleAction('resume')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left border-b">
-                          <FileText className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm text-gray-700 font-medium">Upload Resume</span>
+                        <button onClick={() => handleAction('resume')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 text-left border-b">
+                          <FileText className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground font-medium">Upload Resume</span>
                         </button>
-                        <button onClick={() => handleAction('alerts')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-gray-50 text-left border-b">
-                          <Bell className="w-4 h-4 text-gray-500" />
-                          <span className="text-sm text-gray-700 font-medium">Set Job Alerts</span>
+                        <button onClick={() => handleAction('alerts')} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-muted/50 text-left border-b">
+                          <Bell className="w-4 h-4 text-muted-foreground" />
+                          <span className="text-sm text-foreground font-medium">Set Job Alerts</span>
                         </button>
-                        <button onClick={() => { setShowMenu(false); resetChat(); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-red-50 text-left text-red-600">
+                        <button onClick={() => { setShowMenu(false); resetChat(); }} className="w-full flex items-center gap-3 px-4 py-3 hover:bg-destructive/10 text-left text-destructive">
                           <Trash2 className="w-4 h-4 text-red-500" />
                           <span className="text-sm font-medium">Clear Conversation</span>
                         </button>
@@ -394,7 +394,7 @@ export function ChatbotWidget() {
                   </AnimatePresence>
                   {!isLoading && getActiveSuggestions().length > 0 && (
                     <div className="flex flex-col gap-1 mb-3">
-                      <span className="text-[10px] font-bold uppercase tracking-wider text-gray-400 flex items-center gap-1">
+                      <span className="text-[10px] font-bold uppercase tracking-wider text-muted-foreground flex items-center gap-1">
                         <Sparkles className="w-3 h-3 text-[#00A99D] animate-pulse" /> Suggested
                       </span>
                       <div className="flex flex-wrap gap-1.5 max-h-24 overflow-y-auto">
@@ -412,12 +412,12 @@ export function ChatbotWidget() {
                     </div>
                   )}
                   
-                  <form onSubmit={handleSubmit} className="flex gap-2 items-center bg-gray-50 border border-gray-200 rounded-full pr-1 pl-2 focus-within:border-[#00A99D] focus-within:ring-1 focus-within:ring-[#00A99D] transition-all">
+                  <form onSubmit={handleSubmit} className="flex gap-2 items-center bg-muted/50 border border-border rounded-full pr-1 pl-2 focus-within:border-[#00A99D] focus-within:ring-1 focus-within:ring-[#00A99D] transition-all">
                     <Button 
                       type="button" 
                       variant="ghost" 
                       size="icon" 
-                      className={`rounded-full shrink-0 ${showMenu ? 'text-[#00A99D] bg-[#00A99D]/10' : 'text-gray-400 hover:text-gray-600'}`}
+                      className={`rounded-full shrink-0 ${showMenu ? 'text-[#00A99D] bg-[#00A99D]/10' : 'text-muted-foreground hover:text-foreground'}`}
                       onClick={() => setShowMenu(!showMenu)}
                       disabled={isLoading}
                     >

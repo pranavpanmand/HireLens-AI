@@ -260,7 +260,7 @@ export function ChatbotWidget() {
             {/* Chat Content */}
             {!isMinimized && (
               <>
-                <ScrollArea className="flex-1 p-4 bg-[#F8F9FA]">
+                <ScrollArea className="flex-1 p-4 bg-muted/20">
                   <div className="flex flex-col gap-4 pb-4">
                     
                     {/* Timestamp Divider */}
@@ -289,7 +289,7 @@ export function ChatbotWidget() {
                               {/* Standard text content */}
                               {msg.content && (
                                 <div 
-                                  className="prose prose-sm max-w-none [&>p]:mb-2 [&>p:last-child]:mb-0"
+                                  className="prose prose-sm dark:prose-invert max-w-none [&>p]:mb-2 [&>p:last-child]:mb-0"
                                   dangerouslySetInnerHTML={createMarkup(parseMessageContent(msg.content).text)}
                                 />
                               )}
@@ -309,7 +309,7 @@ export function ChatbotWidget() {
                               {msg.type === 'job_results' && msg.jobs && (
                                 <div className="mt-3 flex flex-col gap-2">
                                   {msg.jobs.map(job => (
-                                    <a key={job.id} href={`/jobs/${job.id}`} target="_blank" rel="noreferrer" className="block p-3 border rounded-lg hover:border-[#00A99D] bg-muted/50 transition-colors text-left">
+                                    <a key={job.id} href={`/jobs/${job.id}`} target="_blank" rel="noreferrer" className="block p-3 border border-border rounded-lg hover:border-primary bg-muted/50 transition-colors text-left">
                                       <div className="font-semibold text-foreground truncate">{job.title}</div>
                                       <div className="text-xs text-muted-foreground truncate">{job.company} • {job.location}</div>
                                     </a>
@@ -327,8 +327,7 @@ export function ChatbotWidget() {
                               <button
                                 key={i}
                                 onClick={() => handleOptionClick(opt)}
-                                className="text-sm px-4 py-2 rounded-full border border-border bg-white hover:border-[#00A99D] hover:text-[#00A99D] transition-colors shadow-sm text-foreground"
-                              >
+                                className="text-sm px-4 py-2 rounded-full border border-border bg-background hover:border-primary hover:text-primary transition-colors shadow-sm text-foreground"
                                 {opt}
                               </button>
                             ))}
@@ -339,7 +338,7 @@ export function ChatbotWidget() {
                     
                     {isLoading && (
                       <div className="flex items-start">
-                        <div className="bg-white border border-gray-100 text-muted-foreground rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-2">
+                        <div className="bg-card border border-border text-muted-foreground rounded-2xl rounded-tl-sm px-4 py-3 shadow-sm flex items-center gap-2">
                           <Loader2 className="w-4 h-4 animate-spin text-[#00A99D]" />
                           <span className="text-sm">Typing...</span>
                         </div>

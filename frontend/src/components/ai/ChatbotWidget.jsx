@@ -328,6 +328,7 @@ export function ChatbotWidget() {
                                 key={i}
                                 onClick={() => handleOptionClick(opt)}
                                 className="text-sm px-4 py-2 rounded-full border border-border bg-background hover:border-primary hover:text-primary transition-colors shadow-sm text-foreground"
+                              >
                                 {opt}
                               </button>
                             ))}

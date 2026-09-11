@@ -1,152 +1,178 @@
 import { motion } from "framer-motion";
-import { FileSearch, Brain, BookOpen, Rocket, Building2 } from "lucide-react";
-import { SpotlightCard } from "@/components/ui/SpotlightCard";
-import { TiltCard } from "@/components/ui/TiltCard";
+import { ArrowRight, Bot, Mic, Clock, BarChart, FileText, LayoutDashboard, BrainCircuit, Target, Video, CheckCircle2, ShieldCheck, Sparkles } from "lucide-react";
 
 export const FeaturesSection = () => {
   return (
-    <section className="py-24 bg-background overflow-hidden relative">
-      <div className="container mx-auto px-4 relative z-10">
-        {/* Section Header */}
-        <div className="text-center max-w-2xl mx-auto mb-16">
-          <motion.span
-            initial={{ opacity: 0 }}
-            whileInView={{ opacity: 1 }}
-            viewport={{ once: true }}
-            className="text-sm font-medium text-secondary uppercase tracking-wider"
-          >
-            How It Works
-          </motion.span>
-          <motion.h2
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.1 }}
-            className="font-display text-3xl md:text-5xl font-bold text-foreground mt-4 mb-6"
-          >
-            Your AI Career Consultant
-          </motion.h2>
-          <motion.p
-            initial={{ opacity: 0, y: 20 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="text-lg text-muted-foreground"
-          >
-            More than just job listings—we analyze, recommend, and guide you toward your ideal career path.
-          </motion.p>
+    <section className="py-24 bg-background overflow-hidden relative border-t border-border">
+      <div className="container mx-auto px-4 max-w-6xl">
+        
+        {/* HOW IT WORKS SECTION */}
+        <div className="mb-32">
+          <div className="mb-12">
+            <h2 className="text-xs font-bold text-primary tracking-widest uppercase mb-3">HOW IT WORKS</h2>
+            <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">A simpler career workflow</h3>
+            <p className="text-muted-foreground text-lg">Focus on practice, feedback, and consistent improvement.</p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-3 gap-6">
+            {[
+              {
+                step: "01",
+                title: "Upload & Match",
+                desc: "Upload your resume and get instantly matched to thousands of live jobs.",
+                icon: FileText
+              },
+              {
+                step: "02",
+                title: "Practice with AI",
+                desc: "Answer technical and HR interview questions tailored to the role.",
+                icon: Mic
+              },
+              {
+                step: "03",
+                title: "Improve every session",
+                desc: "Review feedback and track your progress to land the job.",
+                icon: Clock
+              }
+            ].map((item, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-card border border-border rounded-2xl p-8 hover:shadow-md transition-all hover:border-primary/30 group"
+              >
+                <div className="w-12 h-12 rounded-xl bg-muted/50 border border-border flex items-center justify-center mb-10 group-hover:bg-primary/5 transition-colors">
+                  <item.icon className="w-5 h-5 text-primary" />
+                </div>
+                <div className="text-[10px] font-bold text-primary tracking-widest uppercase mb-2">STEP {item.step}</div>
+                <h4 className="font-display text-xl font-bold text-foreground mb-2">{item.title}</h4>
+                <p className="text-muted-foreground">{item.desc}</p>
+              </motion.div>
+            ))}
+          </div>
         </div>
 
-        {/* Featured Top Row (2 Large Cards with Images) */}
-        <div className="grid grid-cols-1 lg:grid-cols-2 gap-8 mb-8">
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            className="group relative overflow-hidden rounded-3xl bg-card border border-border shadow-sm transition-all duration-300 min-h-[400px]"
-          >
-            <div className="absolute inset-0 z-0">
-              <img 
-                src="https://images.unsplash.com/photo-1586281380349-632531db7ed4?auto=format&fit=crop&w=800&q=80" 
-                alt="Resume Analysis" 
-                className="w-full h-full object-cover opacity-10 group-hover:opacity-20 transition-all duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
-            </div>
-            <div className="relative z-10 p-10 h-full flex flex-col justify-end">
-              <div className="w-16 h-16 rounded-2xl bg-gradient-primary flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-500">
-                <FileSearch className="w-8 h-8 text-primary-foreground" />
-              </div>
-              <h3 className="font-display text-3xl font-bold text-foreground mb-4">Smart Resume Parsing</h3>
-              <p className="text-muted-foreground text-lg max-w-md">
-                Upload your PDF resume and our AI extracts your skills, experience, and qualifications instantly. 
-                We optimize it for ATS systems so you never get auto-rejected.
-              </p>
-            </div>
-            
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_100%,_rgba(43,157,128,0.15),_transparent_60%)] pointer-events-none" />
-          </motion.div>
+        {/* PLATFORM FEATURES SECTION */}
+        <div className="mb-32">
+          <div className="mb-12">
+            <h2 className="text-xs font-bold text-primary tracking-widest uppercase mb-3">PLATFORM FEATURES</h2>
+            <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">Built for focused career growth</h3>
+            <p className="text-muted-foreground text-lg max-w-2xl">
+              Mock interviews, AI evaluation, smart resume parsing, and tailored cover letters — designed to help you prepare with clarity.
+            </p>
+          </div>
 
-          <motion.div
-            initial={{ opacity: 0, y: 30 }}
-            whileInView={{ opacity: 1, y: 0 }}
-            viewport={{ once: true }}
-            transition={{ delay: 0.2 }}
-            className="group relative overflow-hidden rounded-3xl bg-card border border-border shadow-sm transition-all duration-300 min-h-[400px]"
-          >
-            <div className="absolute inset-0 z-0">
-              <img 
-                src="https://images.unsplash.com/photo-1552664730-d307ca884978?auto=format&fit=crop&w=800&q=80" 
-                alt="AI Analysis" 
-                className="w-full h-full object-cover opacity-10 group-hover:opacity-20 transition-all duration-700 group-hover:scale-105"
-              />
-              <div className="absolute inset-0 bg-gradient-to-t from-background via-background/80 to-background/20" />
-            </div>
-            <div className="relative z-10 p-10 h-full flex flex-col justify-end">
-              <div className="w-16 h-16 rounded-2xl bg-secondary flex items-center justify-center mb-6 shadow-lg group-hover:scale-110 transition-transform duration-500">
-                <Brain className="w-8 h-8 text-secondary-foreground" />
-              </div>
-              <h3 className="font-display text-3xl font-bold text-foreground mb-4">AI Match Analysis</h3>
-              <p className="text-muted-foreground text-lg max-w-md">
-                Don't guess if you're a fit. Get a detailed match score showing exactly how your profile aligns 
-                with each job description before you apply.
-              </p>
-            </div>
-            
-            <div className="absolute inset-0 opacity-0 group-hover:opacity-100 transition-opacity duration-500 bg-[radial-gradient(circle_at_50%_100%,_rgba(229,177,36,0.15),_transparent_60%)] pointer-events-none" />
-          </motion.div>
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              {
+                title: "AI Match Analysis",
+                desc: "Instantly see how your resume aligns with job requirements.",
+                icon: BarChart
+              },
+              {
+                title: "Smart Resume Parsing",
+                desc: "Optimize your resume for ATS systems to avoid auto-rejection.",
+                icon: FileText
+              },
+              {
+                title: "Tailored Cover Letters",
+                desc: "Generate highly personalized cover letters in one click.",
+                icon: LayoutDashboard
+              },
+              {
+                title: "Resume-based questions",
+                desc: "Questions generated directly from your skills and projects.",
+                icon: BrainCircuit
+              },
+              {
+                title: "Session tracking",
+                desc: "Track interview history and improvement trends over time.",
+                icon: Clock
+              },
+              {
+                title: "Communication insights",
+                desc: "Improve speaking confidence and delivery with audio feedback.",
+                icon: Mic
+              }
+            ].map((feature, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-card border border-border rounded-2xl p-6 hover:shadow-sm transition-all flex items-start gap-5"
+              >
+                <div className="w-10 h-10 shrink-0 rounded-xl bg-muted/50 border border-border flex items-center justify-center mt-1">
+                  <feature.icon className="w-4 h-4 text-primary" />
+                </div>
+                <div>
+                  <h4 className="font-display text-lg font-bold text-foreground mb-1">{feature.title}</h4>
+                  <p className="text-muted-foreground text-sm leading-relaxed">{feature.desc}</p>
+                </div>
+              </motion.div>
+            ))}
+          </div>
         </div>
 
-        {/* Secondary Bottom Row (3 Smaller Cards) */}
-        <div className="grid grid-cols-1 md:grid-cols-3 gap-8">
-          {[
-            {
-              icon: BookOpen,
-              title: "Learning Paths",
-              description: "Discover what skills you're missing and get personalized learning recommendations.",
-              color: "text-blue-500",
-              bg: "bg-blue-500/10"
-            },
-            {
-              icon: Rocket,
-              title: "Live Job Feed",
-              description: "Access thousands of real-time job openings from top companies across the globe.",
-              color: "text-purple-500",
-              bg: "bg-purple-500/10"
-            },
-            {
-              icon: Building2,
-              title: "Company Insights",
-              description: "Learn about company culture, salary ranges, and growth opportunities upfront.",
-              color: "text-emerald-500",
-              bg: "bg-emerald-500/10"
-            }
-          ].map((feature, i) => (
-            <motion.div
-              key={feature.title}
-              initial={{ opacity: 0, y: 20 }}
-              whileInView={{ opacity: 1, y: 0 }}
-              viewport={{ once: true }}
-              transition={{ delay: 0.3 + (i * 0.1) }}
-            >
-              <TiltCard className="h-full">
-                <SpotlightCard className="h-full group">
-                  <div className="p-8 h-full flex flex-col relative z-10">
-                    <div className={`w-14 h-14 rounded-2xl flex items-center justify-center mb-6 ${feature.bg} group-hover:scale-110 transition-transform duration-300`}>
-                      <feature.icon className={`w-7 h-7 ${feature.color}`} />
-                    </div>
-                    <h3 className="font-display font-semibold text-xl text-foreground mb-3">
-                      {feature.title}
-                    </h3>
-                    <p className="text-muted-foreground leading-relaxed">
-                      {feature.description}
-                    </p>
+        {/* INTERVIEW MODES SECTION */}
+        <div>
+          <div className="mb-12">
+            <h2 className="text-xs font-bold text-primary tracking-widest uppercase mb-3">INTERVIEW MODES</h2>
+            <h3 className="font-display text-3xl md:text-4xl font-bold text-foreground mb-4">Practice for different rounds</h3>
+            <p className="text-muted-foreground text-lg max-w-2xl">
+              Switch between interview styles and improve specific parts of your preparation.
+            </p>
+          </div>
+
+          <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+            {[
+              {
+                title: "HR interview mode",
+                desc: "Behavioral and recruiter-style interview preparation.",
+                icon: Target
+              },
+              {
+                title: "Technical interview mode",
+                desc: "Role-focused technical interview preparation.",
+                icon: Video
+              },
+              {
+                title: "Confidence insights",
+                desc: "Improve speaking and communication quality.",
+                icon: Sparkles
+              },
+              {
+                title: "Flexible credits",
+                desc: "Simple usage-based interview sessions.",
+                icon: ShieldCheck
+              }
+            ].map((mode, i) => (
+              <motion.div
+                key={i}
+                initial={{ opacity: 0, y: 20 }}
+                whileInView={{ opacity: 1, y: 0 }}
+                viewport={{ once: true }}
+                transition={{ delay: i * 0.1 }}
+                className="bg-card border border-border rounded-2xl p-6 hover:shadow-sm hover:border-primary/30 transition-all flex items-center justify-between group cursor-pointer"
+              >
+                <div className="flex items-center gap-5">
+                  <div className="w-10 h-10 shrink-0 rounded-xl bg-muted/50 border border-border flex items-center justify-center">
+                    <mode.icon className="w-4 h-4 text-primary" />
                   </div>
-                </SpotlightCard>
-              </TiltCard>
-            </motion.div>
-          ))}
+                  <div>
+                    <h4 className="font-display text-base font-bold text-foreground mb-0.5">{mode.title}</h4>
+                    <p className="text-muted-foreground text-sm">{mode.desc}</p>
+                  </div>
+                </div>
+                <ArrowRight className="w-4 h-4 text-muted-foreground group-hover:text-primary transition-colors shrink-0 ml-4" />
+              </motion.div>
+            ))}
+          </div>
         </div>
+
       </div>
     </section>
   );

@@ -9,7 +9,7 @@ import { useJobs } from "@/hooks/useJobs";
 import { useResumes } from "@/hooks/useResumes";
 import { useCoverLetter } from "@/hooks/useCoverLetter";
 import { Loader2, FileText, Copy, Download, Sparkles, Check, Award, UserCheck } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 export default function CoverLetterGenerator() {
   const { data: resumes = [] } = useResumes();

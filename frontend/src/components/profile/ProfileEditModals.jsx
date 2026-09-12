@@ -14,7 +14,7 @@ import {
   useUpdateAccomplishments 
 } from "@/hooks/useProfile";
 import { useJobAlerts, useToggleJobAlerts } from "@/hooks/useJobAlerts";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { X } from "lucide-react";
 import { Switch } from "@/components/ui/switch";
 

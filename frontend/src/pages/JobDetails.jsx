@@ -9,7 +9,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useCoverLetter } from "@/hooks/useCoverLetter";
 import { useSavedJobs, useToggleSaveJob } from "@/hooks/useSavedJobs";
 import DOMPurify from 'dompurify';
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { API_URL } from "@/services/api";
 
 export default function JobDetails() {

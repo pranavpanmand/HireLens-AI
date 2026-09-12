@@ -3,7 +3,7 @@ import { useParams, useNavigate, Link } from "react-router-dom";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { fetchApi } from "@/services/api";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { KeyRound, ArrowRight, Loader2 } from "lucide-react";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";

@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Video, Mic, Square, Play, Download, Trash2, Camera, Sparkles } from "lucide-react";
 import { useProfile } from "@/hooks/useProfile";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 const VideoResume = () => {
   const { data: profile } = useProfile();

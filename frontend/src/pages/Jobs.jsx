@@ -12,7 +12,7 @@ import { useAnalyzeMatch } from "@/hooks/useMatchAnalysis";
 import { useRecommendations } from "@/hooks/useRecommendations";
 import { useAuth } from "@/contexts/AuthContext";
 import { Loader2, SearchX, AlertTriangle, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { Button } from "@/components/ui/button";
 
 const DEFAULT_FILTERS = {

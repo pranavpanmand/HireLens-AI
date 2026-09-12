@@ -5,7 +5,7 @@ import { motion } from "framer-motion";
 import { ArrowLeft, Loader2, Mail, ExternalLink, ChevronDown, Check, X, FileText } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { Badge } from "@/components/ui/badge";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { API_URL } from "@/services/api";

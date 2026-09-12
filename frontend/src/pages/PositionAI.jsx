@@ -4,7 +4,7 @@ import { Card, CardContent, CardHeader, CardTitle, CardDescription } from "@/com
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
 import { Target, Upload, FileText, CheckCircle2, ChevronRight, BarChart3, TrendingUp, Sparkles, AlertCircle } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { useAuth } from "@/contexts/AuthContext";
 
 const PositionAI = () => {

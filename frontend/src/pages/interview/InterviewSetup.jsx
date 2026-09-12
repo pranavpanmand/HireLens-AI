@@ -1,6 +1,6 @@
 import { useMemo, useState } from "react";
 import { useNavigate, useLocation, Link } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import {
   Sparkles, ArrowLeft, Loader2, Briefcase, FileText, Target,
   MessagesSquare, ClipboardList, AlertCircle, Mic, Keyboard,

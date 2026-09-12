@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { fetchApi } from "@/services/api";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { useAuth } from "@/contexts/AuthContext";
 
 export const useJobAlerts = () => {

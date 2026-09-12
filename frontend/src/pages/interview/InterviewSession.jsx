@@ -1,6 +1,6 @@
 import { useCallback, useEffect, useMemo, useRef, useState } from "react";
 import { useParams, useNavigate, useLocation, Link } from "react-router-dom";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, Mic, MicOff, Square, Send, ArrowRight, Pencil, RotateCcw,

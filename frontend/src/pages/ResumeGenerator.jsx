@@ -9,7 +9,7 @@ import { useJobs } from "@/hooks/useJobs";
 import { useResumes } from "@/hooks/useResumes";
 import { useTailoredResume } from "@/hooks/useTailoredResume";
 import { Loader2, FileText, Copy, Download, Sparkles } from "lucide-react";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 export default function ResumeGenerator() {
   const { data: resumes = [] } = useResumes();

@@ -1,7 +1,7 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { profileApi } from "@/services/profileApi";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 
 export const useProfile = () => {
   const { user, hasRole } = useAuth();

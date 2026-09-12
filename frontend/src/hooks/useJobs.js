@@ -1,6 +1,6 @@
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useAuth } from "@/contexts/AuthContext";
-import { toast } from "sonner";
+import { toast } from "react-toastify";
 import { jobsApi } from "@/services/jobsApi";
 import { savedJobsApi } from "@/services/savedJobsApi";
 

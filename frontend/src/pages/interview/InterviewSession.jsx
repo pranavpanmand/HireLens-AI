@@ -5,7 +5,12 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, Mic, MicOff, Square, Send, ArrowRight, Pencil, RotateCcw,
   CheckCircle2, XCircle, AlertCircle, Lightbulb, Volume2, PhoneOff, Keyboard,
+  Code, MessageSquare, Maximize2, Minimize2
 } from "lucide-react";
+
+import Editor from "@monaco-editor/react";
+import { marked } from "marked";
+import DOMPurify from "dompurify";
 
 import { Button } from "@/components/ui/button";
 import { Textarea } from "@/components/ui/textarea";
@@ -43,6 +48,22 @@ const ScorePill = ({ label, value }) => (
   </div>
 );
 
+const CODE_BOILERPLATES = {
+  javascript: "// Write your JavaScript code here\n\nfunction solution() {\n  \n}\n",
+  python: "# Write your Python code here\n\ndef solution():\n    pass\n",
+  java: "// Write your Java code here\n\nclass Solution {\n    public void solve() {\n        \n    }\n}\n",
+  cpp: "// Write your C++ code here\n#include <iostream>\nusing namespace std;\n\nint main() {\n    \n    return 0;\n}\n",
+  csharp: "// Write your C# code here\nusing System;\n\nclass Solution {\n    static void Main() {\n        \n    }\n}\n",
+  go: "// Write your Go code here\npackage main\n\nimport \"fmt\"\n\nfunc main() {\n    \n}\n",
+  ruby: "# Write your Ruby code here\n\ndef solution\n  \nend\n",
+  rust: "// Write your Rust code here\nfn main() {\n    \n}\n",
+  php: "<?php\n// Write your PHP code here\n\nfunction solution() {\n    \n}\n?>\n",
+  swift: "// Write your Swift code here\n\nfunc solution() {\n    \n}\n",
+  typescript: "// Write your TypeScript code here\n\nfunction solution(): void {\n  \n}\n",
+  sql: "-- Write your SQL query here\n\nSELECT * FROM table_name;\n",
+  plaintext: "Type your plain text or pseudocode here..."
+};
+
 export default function InterviewSession() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
@@ -68,6 +89,9 @@ export default function InterviewSession() {
   const [elapsed, setElapsed] = useState(0);
   const [showEndConfirm, setShowEndConfirm] = useState(false);
   const [submitting, setSubmitting] = useState(false);
+  const [isCodeMode, setIsCodeMode] = useState(false);
+  const [codeLanguage, setCodeLanguage] = useState("javascript");
+  const [isEditorExpanded, setIsEditorExpanded] = useState(false);
 
   const questions = session?.questions || [];
   const totalQuestions = questions.length;
@@ -95,12 +119,36 @@ export default function InterviewSession() {
 
   const beginAnswering = useCallback(() => {
     setPhase(PHASE.ANSWERING);
-    if (isConversational && supported.recognition) {
+    if (isConversational && supported.recognition && !isCodeMode) {
       startListening({ reset: true });
-    } else {
+    } else if (!isCodeMode) {
       resetTranscript();
     }
-  }, [isConversational, supported.recognition, startListening, resetTranscript]);
+  }, [isConversational, supported.recognition, startListening, resetTranscript, isCodeMode]);
+
+  const handleLanguageChange = (newLang) => {
+    const isCurrentBoilerplate = Object.values(CODE_BOILERPLATES).includes(draftAnswer.trim());
+    if (!draftAnswer.trim() || isCurrentBoilerplate) {
+      setDraftAnswer(CODE_BOILERPLATES[newLang]);
+    }
+    setCodeLanguage(newLang);
+  };
+
+  const handleCodeModeToggle = (enable) => {
+    setIsCodeMode(enable);
+    if (enable) {
+      stopListening();
+      cancelSpeech();
+      const isCurrentBoilerplate = Object.values(CODE_BOILERPLATES).includes(draftAnswer.trim());
+      if (!draftAnswer.trim() || isCurrentBoilerplate || draftAnswer === liveTranscript.trim()) {
+        setDraftAnswer(CODE_BOILERPLATES[codeLanguage]);
+      }
+    } else {
+      if (isConversational && supported.recognition && phase === PHASE.ANSWERING) {
+        startListening({ reset: false });
+      }
+    }
+  };
 
   // Ask the current question: read it aloud (conversational) then open answering.
   const askedIndexRef = useRef(-1);
@@ -113,6 +161,7 @@ export default function InterviewSession() {
     setDraftAnswer("");
     setFeedback(null);
     resetTranscript();
+    setIsCodeMode(false); // Reset to text mode for each new question
 
     if (isConversational && supported.synthesis) {
       speak(currentQuestion.question, { onEnd: beginAnswering });
@@ -169,6 +218,8 @@ export default function InterviewSession() {
         questionIndex: currentIndex,
         answer,
         timeTaken: elapsed,
+        isCode: isCodeMode,
+        language: codeLanguage,
       });
       setFeedback(result?.evaluation || null);
       setPhase(PHASE.FEEDBACK);
@@ -346,60 +397,154 @@ export default function InterviewSession() {
                 animate={{ opacity: 1, y: 0 }}
                 exit={{ opacity: 0, y: -8 }}
               >
-                {isConversational && supported.recognition ? (
-                  <div className="rounded-2xl border-2 border-dashed border-border p-5">
-                    <div className="flex items-center justify-between mb-3">
-                      <span className="text-sm font-medium text-foreground flex items-center gap-2">
-                        {isListening ? (
-                          <><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Recording your answer</>
-                        ) : (
-                          <>Your answer</>
-                        )}
-                      </span>
-                      <Button variant="ghost" size="sm" onClick={handleToggleMic} className="gap-2">
-                        {isListening ? <><MicOff className="w-4 h-4" /> Pause</> : <><Mic className="w-4 h-4" /> Resume</>}
-                      </Button>
-                    </div>
-                    <p className={cn(
-                      "min-h-[96px] text-base leading-relaxed",
-                      draftAnswer ? "text-foreground" : "text-muted-foreground"
-                    )}>
-                      {draftAnswer || (phase === PHASE.ASKING
-                        ? "The interviewer is asking…"
-                        : "Start speaking and your words will appear here.")}
-                    </p>
-                    <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                {/* Code Mode Toggle (Only for Technical Questions) */}
+                {currentQuestion?.category === 'technical' && (
+                  <div className="flex justify-end mb-3">
+                    <div className="flex items-center gap-1 bg-muted p-1 rounded-lg">
                       <Button
-                        onClick={handleStopAndReview}
-                        disabled={phase === PHASE.ASKING || (!draftAnswer.trim() && !liveTranscript.trim())}
-                        className="gap-2 flex-1"
+                        variant={!isCodeMode ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-7 text-xs px-3"
+                        onClick={() => handleCodeModeToggle(false)}
                       >
-                        <Square className="w-4 h-4" /> Done — review answer
+                        <MessageSquare className="w-3 h-3 mr-1.5" />
+                        Voice / Text
+                      </Button>
+                      <Button
+                        variant={isCodeMode ? "secondary" : "ghost"}
+                        size="sm"
+                        className="h-7 text-xs px-3"
+                        onClick={() => handleCodeModeToggle(true)}
+                      >
+                        <Code className="w-3 h-3 mr-1.5" />
+                        Code Editor
                       </Button>
                     </div>
+                  </div>
+                )}
+
+                {isCodeMode ? (
+                  <div className="rounded-2xl border border-border overflow-hidden bg-card shadow-sm flex flex-col">
+                     <div className="bg-muted px-4 py-2 border-b border-border flex items-center justify-between">
+                       <span className="text-sm font-medium flex items-center gap-2">
+                         <Code className="w-4 h-4 text-primary" />
+                         Code Editor
+                       </span>
+                       <div className="flex items-center gap-2">
+                         <select 
+                           value={codeLanguage} 
+                           onChange={(e) => handleLanguageChange(e.target.value)}
+                           className="text-xs bg-background border border-border rounded-md px-2 py-1 outline-none"
+                         >
+                           <option value="javascript">JavaScript</option>
+                           <option value="python">Python</option>
+                           <option value="java">Java</option>
+                           <option value="cpp">C++</option>
+                           <option value="csharp">C#</option>
+                           <option value="go">Go</option>
+                           <option value="ruby">Ruby</option>
+                           <option value="rust">Rust</option>
+                           <option value="php">PHP</option>
+                           <option value="swift">Swift</option>
+                           <option value="typescript">TypeScript</option>
+                           <option value="sql">SQL</option>
+                           <option value="plaintext">Plain Text</option>
+                         </select>
+                         <Button 
+                           variant="ghost" 
+                           size="sm" 
+                           className="h-7 w-7 p-0"
+                           onClick={() => setIsEditorExpanded(!isEditorExpanded)}
+                           title={isEditorExpanded ? "Minimize Editor" : "Maximize Editor"}
+                         >
+                           {isEditorExpanded ? <Minimize2 className="w-4 h-4" /> : <Maximize2 className="w-4 h-4" />}
+                         </Button>
+                       </div>
+                     </div>
+                     <div className={cn("w-full transition-all duration-200", isEditorExpanded ? "h-[65vh]" : "h-[300px]")}>
+                       <Editor
+                         height="100%"
+                         language={codeLanguage}
+                         theme="vs-dark"
+                         value={draftAnswer}
+                         onChange={(val) => setDraftAnswer(val || "")}
+                         options={{
+                           minimap: { enabled: false },
+                           fontSize: 14,
+                           wordWrap: "on",
+                           scrollBeyondLastLine: false,
+                           suggestOnTriggerCharacters: true,
+                           quickSuggestions: true,
+                           formatOnType: true,
+                         }}
+                       />
+                     </div>
+                     <div className="p-4 border-t border-border bg-card">
+                        <Button
+                          onClick={() => setPhase(PHASE.REVIEW)}
+                          disabled={!draftAnswer.trim()}
+                          className="w-full sm:w-auto"
+                        >
+                          Review Code <ArrowRight className="w-4 h-4 ml-2" />
+                        </Button>
+                     </div>
                   </div>
                 ) : (
-                  // Structured / no-mic: type the answer.
-                  <div className="rounded-2xl border border-border p-5">
-                    <label htmlFor="typed-answer" className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
-                      <Keyboard className="w-4 h-4" /> Type your answer
-                    </label>
-                    <Textarea
-                      id="typed-answer"
-                      rows={6}
-                      autoFocus
-                      placeholder="Write your answer here…"
-                      value={draftAnswer}
-                      onChange={(e) => setDraftAnswer(e.target.value)}
-                    />
-                    <Button
-                      onClick={() => setPhase(PHASE.REVIEW)}
-                      disabled={!draftAnswer.trim()}
-                      className="gap-2 mt-4 w-full sm:w-auto"
-                    >
-                      Review answer <ArrowRight className="w-4 h-4" />
-                    </Button>
-                  </div>
+                  isConversational && supported.recognition ? (
+                    <div className="rounded-2xl border-2 border-dashed border-border p-5">
+                      <div className="flex items-center justify-between mb-3">
+                        <span className="text-sm font-medium text-foreground flex items-center gap-2">
+                          {isListening ? (
+                            <><span className="w-2 h-2 rounded-full bg-emerald-500 animate-pulse" /> Recording your answer</>
+                          ) : (
+                            <>Your answer</>
+                          )}
+                        </span>
+                        <Button variant="ghost" size="sm" onClick={handleToggleMic} className="gap-2">
+                          {isListening ? <><MicOff className="w-4 h-4" /> Pause</> : <><Mic className="w-4 h-4" /> Resume</>}
+                        </Button>
+                      </div>
+                      <p className={cn(
+                        "min-h-[96px] text-base leading-relaxed",
+                        draftAnswer ? "text-foreground" : "text-muted-foreground"
+                      )}>
+                        {draftAnswer || (phase === PHASE.ASKING
+                          ? "The interviewer is asking…"
+                          : "Start speaking and your words will appear here.")}
+                      </p>
+                      <div className="flex flex-col sm:flex-row gap-2 mt-4">
+                        <Button
+                          onClick={handleStopAndReview}
+                          disabled={phase === PHASE.ASKING || (!draftAnswer.trim() && !liveTranscript.trim())}
+                          className="gap-2 flex-1"
+                        >
+                          <Square className="w-4 h-4" /> Done — review answer
+                        </Button>
+                      </div>
+                    </div>
+                  ) : (
+                    // Structured / no-mic: type the answer.
+                    <div className="rounded-2xl border border-border p-5">
+                      <label htmlFor="typed-answer" className="text-sm font-medium text-foreground mb-2 flex items-center gap-2">
+                        <Keyboard className="w-4 h-4" /> Type your answer
+                      </label>
+                      <Textarea
+                        id="typed-answer"
+                        rows={6}
+                        autoFocus
+                        placeholder="Write your answer here…"
+                        value={draftAnswer}
+                        onChange={(e) => setDraftAnswer(e.target.value)}
+                      />
+                      <Button
+                        onClick={() => setPhase(PHASE.REVIEW)}
+                        disabled={!draftAnswer.trim()}
+                        className="gap-2 mt-4 w-full sm:w-auto"
+                      >
+                        Review answer <ArrowRight className="w-4 h-4 ml-2" />
+                      </Button>
+                    </div>
+                  )
                 )}
               </motion.div>
             )}
@@ -418,14 +563,40 @@ export default function InterviewSession() {
                   <span className="text-sm font-semibold text-foreground">Review &amp; edit before submitting</span>
                 </div>
                 <p className="text-xs text-muted-foreground mb-3">
-                  Speech-to-text isn't perfect. Fix any wording so you're scored on what you meant.
+                  {isCodeMode 
+                    ? "Review your code before submitting. Ensure it handles edge cases."
+                    : "Speech-to-text isn't perfect. Fix any wording so you're scored on what you meant."}
                 </p>
-                <Textarea
-                  rows={6}
-                  value={draftAnswer}
-                  onChange={(e) => { setDraftAnswer(e.target.value); setTranscriptManually(e.target.value); }}
-                  placeholder="Your answer…"
-                />
+                {isCodeMode ? (
+                  <div className="h-[300px] w-full rounded-md overflow-hidden border border-border">
+                    <Editor
+                      height="100%"
+                      language={codeLanguage}
+                      theme="vs-dark"
+                      value={draftAnswer}
+                      onChange={(val) => {
+                        setDraftAnswer(val || "");
+                        setTranscriptManually(val || "");
+                      }}
+                      options={{
+                        minimap: { enabled: false },
+                        fontSize: 14,
+                        wordWrap: "on",
+                        scrollBeyondLastLine: false,
+                        suggestOnTriggerCharacters: true,
+                        quickSuggestions: true,
+                        formatOnType: true,
+                      }}
+                    />
+                  </div>
+                ) : (
+                  <Textarea
+                    rows={6}
+                    value={draftAnswer}
+                    onChange={(e) => { setDraftAnswer(e.target.value); setTranscriptManually(e.target.value); }}
+                    placeholder="Your answer…"
+                  />
+                )}
                 {!draftAnswer.trim() && (
                   <p className="text-xs text-amber-600 mt-2">
                     This answer is empty — you can submit it as skipped, or re-record.
@@ -512,10 +683,15 @@ export default function InterviewSession() {
 
                 {feedback.improvedAnswer && (
                   <details className="rounded-lg bg-muted/60 p-3 mb-4 group">
-                    <summary className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-foreground">
+                    <summary className="flex items-center gap-1.5 cursor-pointer text-xs font-semibold text-foreground mb-2">
                       <Lightbulb className="w-4 h-4 text-primary" /> See a stronger example answer
                     </summary>
-                    <p className="text-sm text-foreground leading-relaxed mt-2">{feedback.improvedAnswer}</p>
+                    <div 
+                      className="text-sm text-foreground leading-relaxed prose prose-sm dark:prose-invert max-w-none"
+                      dangerouslySetInnerHTML={{
+                        __html: DOMPurify.sanitize(marked.parse(feedback.improvedAnswer))
+                      }}
+                    />
                   </details>
                 )}
 

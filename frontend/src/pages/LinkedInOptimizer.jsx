@@ -4,7 +4,7 @@ import { Briefcase, Loader2, Linkedin, Copy, CheckCircle2, ChevronRight } from '
 import { Button } from '@/components/ui/button';
 import { useLinkedInOptimizer } from '@/hooks/useLinkedInOptimizer';
 import { useResumes } from '@/hooks/useResumes';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
 export default function LinkedInOptimizer() {
   const { data: resumes = [], isLoading: isLoadingResumes } = useResumes();

@@ -365,7 +365,7 @@ exports.startMockInterview = startMockInterview;
 const submitAnswer = async (req, res, next) => {
     try {
         const { sessionId } = req.params;
-        const { questionIndex, answer, timeTaken } = req.body;
+        const { questionIndex, answer, timeTaken, isCode, language } = req.body;
 
         if (!mongoose.Types.ObjectId.isValid(sessionId)) {
             throw new errorHandler_1.AppError('Invalid session id', 400);
@@ -385,7 +385,7 @@ const submitAnswer = async (req, res, next) => {
 
         const question = session.questions[idx].question;
         // Uses the JD snapshot taken at start — no per-answer JobPosting lookup.
-        const evaluation = await (0, ai_service_1.evaluateAnswer)(question, answer, session.jobDescription || '');
+        const evaluation = await (0, ai_service_1.evaluateAnswer)(question, answer, session.jobDescription || '', isCode, language);
 
         const answerObj = {
             questionIndex: idx,

@@ -4,7 +4,7 @@ import { BookOpen, Loader2, Target, Briefcase, ChevronDown, ChevronUp, Copy, Che
 import { Button } from '@/components/ui/button';
 import { useStarStories } from '@/hooks/useStarStories';
 import { useResumes } from '@/hooks/useResumes';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
 export default function StarStories() {
   const { data: resumes = [], isLoading: isLoadingResumes } = useResumes();

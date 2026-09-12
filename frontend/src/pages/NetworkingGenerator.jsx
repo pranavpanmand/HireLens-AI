@@ -4,7 +4,7 @@ import { Mail, Loader2, Linkedin, Copy, CheckCircle2, User, Building2, Briefcase
 import { Button } from '@/components/ui/button';
 import { useNetworkingGenerator } from '@/hooks/useNetworkingGenerator';
 import { useResumes } from '@/hooks/useResumes';
-import { toast } from 'sonner';
+import { toast } from 'react-toastify';
 
 export default function NetworkingGenerator() {
   const { data: resumes = [], isLoading: isLoadingResumes } = useResumes();

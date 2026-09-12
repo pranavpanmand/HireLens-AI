@@ -285,7 +285,7 @@ async function generateMockQuestions(jobDescription, jobTitle, interviewType = '
  * Returns the original clarity/relevance/specificity axes plus the
  * confidence/communication/correctness axes merged in from PrepNexa.
  */
-async function evaluateAnswer(question, answer, jobDescription) {
+async function evaluateAnswer(question, answer, jobDescription, isCode = false, language = 'javascript') {
     const text = (answer || '').trim();
 
     // Don't spend a Gemini call (or invent a score) on a blank answer.
@@ -300,7 +300,46 @@ async function evaluateAnswer(question, answer, jobDescription) {
     }
 
     const model = getModel();
-    const prompt = `
+    let prompt;
+
+    if (isCode) {
+        prompt = `
+    You are an expert Senior Software Engineer and technical interviewer. Evaluate this CODE submission honestly and specifically.
+
+    Question: ${question}
+
+    Language: ${language}
+    Candidate's Code Answer:
+    ${text.substring(0, 3000)}
+
+    Job Context:
+    ${(jobDescription || '').substring(0, 2000)}
+
+    Scoring guidance for CODE answers:
+    - 0-3: The code does not solve the problem, has syntax errors, or is completely wrong.
+    - 4-6: The code solves the basic problem but has poor Big-O complexity, misses edge cases, or has poor variable naming.
+    - 7-8: The code is correct, handles edge cases, and has decent time/space complexity.
+    - 9-10: The code is exceptional, highly optimized, bug-free, and production-ready.
+    
+    Judge based on: Correctness, Time/Space Complexity (Big-O), Edge Cases, and Readability.
+
+    Return JSON:
+    {
+      "score": number (0-10, the overall score),
+      "clarity": number (0-10, readability and variable naming),
+      "relevance": number (0-10, how well it solves the specific problem asked),
+      "specificity": number (0-10, handling of edge cases and constraints),
+      "confidence": number (0-10, structure and modularity of the code),
+      "communication": number (0-10, use of comments and code organization),
+      "correctness": number (0-10, factual logic, Big-O complexity, and bug-free execution),
+      "feedback": string (2-3 sentences of constructive feedback, specifically mentioning Time/Space complexity),
+      "whatWentWell": string (1-2 sentences naming a genuine strength of the code),
+      "whatToImprove": string (1-2 sentences naming the highest-impact optimization),
+      "improvedAnswer": string (a bug-free, highly optimized Model Code solution, wrapped in markdown code blocks)
+    }
+    `;
+    } else {
+        prompt = `
     You are an expert interview coach. Evaluate this answer honestly and specifically.
 
     Question: ${question}
@@ -334,6 +373,7 @@ async function evaluateAnswer(question, answer, jobDescription) {
       "improvedAnswer": string (a model answer for comparison, 2-3 sentences)
     }
     `;
+    }
 
     const result = await callWithRetry(() => model.generateContent(prompt));
     const parsed = cleanJSON(result.response.text());

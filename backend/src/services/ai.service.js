@@ -215,7 +215,7 @@ async function generateMockQuestions(jobDescription, jobTitle, interviewType = '
     ${(jobDescription || '').substring(0, 5000)}
 
     Generate exactly ${count} questions that strongly reflect the chosen "Interview Type" and "Difficulty Level".
-    - If Technical: Focus primarily on coding, system design, or technical concepts relevant to the JD.
+    - If Technical: You MUST provide practical algorithmic coding challenges (like LeetCode problems) that the candidate must solve by writing actual code. Include specific input/output examples for the coding questions.
     - If Behavioral: Focus on past experiences, conflict resolution, leadership, and soft skills (STAR method).
     - If HR/Managerial: Focus on culture fit, career goals, situational judgement, and project management.
     - If Mixed: Provide a balanced mix of Technical, Behavioral, and Situational questions.

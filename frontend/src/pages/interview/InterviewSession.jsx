@@ -241,11 +241,15 @@ export default function InterviewSession() {
       toast.error(err?.message || "Could not generate your report. Please try again.");
     }
   }, [cancelSpeech, stopListening, finishInterview, sessionId, navigate]);
-
   const handleNext = () => {
     if (isLastQuestion) {
       goToReport();
     } else {
+      setPhase(PHASE.ASKING);
+      setFeedback(null);
+      setDraftAnswer("");
+      setIsCodeMode(false);
+      resetTranscript();
       setCurrentIndex((i) => i + 1);
     }
   };

@@ -14,23 +14,46 @@ import { Dialog, DialogContent, DialogHeader, DialogTitle, DialogTrigger } from 
 import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@/components/ui/select";
 import { Plus, Briefcase, MapPin, DollarSign, Clock, Users, Loader2 } from "lucide-react";
 
+import { applicationsApi } from "@/services/applicationsApi";
+
 const RecruiterDashboard = () => {
   const { user } = useAuth();
   const { data: jobs, isLoading } = useRecruiterJobs();
   const createJob = useCreateJob();
   const [isDialogOpen, setIsDialogOpen] = useState(false);
+  const [isApplicantsDialogOpen, setIsApplicantsDialogOpen] = useState(false);
+  const [selectedJob, setSelectedJob] = useState(null);
+  const [applicants, setApplicants] = useState([]);
+  const [isLoadingApplicants, setIsLoadingApplicants] = useState(false);
+
   const [newJob, setNewJob] = useState({
     title: "",
     company: "",
     location: "",
-    salary_range: "",
-    job_type: "Full-time",
+    salaryRange: "",
+    jobType: "Full-time",
     description: "",
     skills: "",
     requirements: "",
-    apply_url: "",
-    is_active: true
+    applyUrl: "",
+    isActive: true
   });
+
+  const handleViewApplicants = async (job) => {
+    setSelectedJob(job);
+    setIsApplicantsDialogOpen(true);
+    setIsLoadingApplicants(true);
+    try {
+      const res = await applicationsApi.getJobApplicants(job._id);
+      if (res.success) {
+        setApplicants(res.data);
+      }
+    } catch (err) {
+      console.error("Failed to load applicants", err);
+    } finally {
+      setIsLoadingApplicants(false);
+    }
+  };
 
   const handleCreateJob = async (e) => {
     e.preventDefault();
@@ -45,13 +68,13 @@ const RecruiterDashboard = () => {
       title: "",
       company: "",
       location: "",
-      salary_range: "",
-      job_type: "Full-time",
+      salaryRange: "",
+      jobType: "Full-time",
       description: "",
       skills: "",
       requirements: "",
-      apply_url: "",
-      is_active: true
+      applyUrl: "",
+      isActive: true
     });
     setIsDialogOpen(false);
   };
@@ -123,8 +146,8 @@ const RecruiterDashboard = () => {
                       <Label htmlFor="salary">Salary Range</Label>
                       <Input
                         id="salary"
-                        value={newJob.salary_range}
-                        onChange={(e) => setNewJob({ ...newJob, salary_range: e.target.value })}
+                        value={newJob.salaryRange}
+                        onChange={(e) => setNewJob({ ...newJob, salaryRange: e.target.value })}
                         placeholder="$120K - $150K" />
                       
                     </div>
@@ -133,7 +156,7 @@ const RecruiterDashboard = () => {
                   <div className="grid grid-cols-2 gap-4">
                     <div className="space-y-2">
                       <Label>Job Type</Label>
-                      <Select value={newJob.job_type} onValueChange={(v) => setNewJob({ ...newJob, job_type: v })}>
+                      <Select value={newJob.jobType} onValueChange={(v) => setNewJob({ ...newJob, jobType: v })}>
                         <SelectTrigger>
                           <SelectValue />
                         </SelectTrigger>
@@ -146,11 +169,11 @@ const RecruiterDashboard = () => {
                       </Select>
                     </div>
                     <div className="space-y-2">
-                      <Label htmlFor="apply_url">Application URL</Label>
+                      <Label htmlFor="applyUrl">Application URL</Label>
                       <Input
-                        id="apply_url"
-                        value={newJob.apply_url}
-                        onChange={(e) => setNewJob({ ...newJob, apply_url: e.target.value })}
+                        id="applyUrl"
+                        value={newJob.applyUrl}
+                        onChange={(e) => setNewJob({ ...newJob, applyUrl: e.target.value })}
                         placeholder="https://..." />
                       
                     </div>
@@ -211,7 +234,7 @@ const RecruiterDashboard = () => {
                 <Briefcase className="w-4 h-4 text-muted-foreground" />
               </CardHeader>
               <CardContent>
-                <div className="text-2xl font-bold">{jobs?.filter((j) => j.is_active).length || 0}</div>
+                <div className="text-2xl font-bold">{jobs?.filter((j) => j.isActive).length || 0}</div>
               </CardContent>
             </Card>
             <Card>
@@ -253,7 +276,7 @@ const RecruiterDashboard = () => {
               <div className="space-y-4">
                   {jobs.map((job) =>
                 <motion.div
-                  key={job.id}
+                  key={job._id}
                   initial={{ opacity: 0, y: 10 }}
                   animate={{ opacity: 1, y: 0 }}
                   className="p-4 rounded-lg border border-border hover:border-primary/20 transition-colors">
@@ -267,10 +290,10 @@ const RecruiterDashboard = () => {
                               <MapPin className="w-4 h-4" />
                               {job.location}
                             </span>
-                            {job.salary_range &&
+                            {job.salaryRange &&
                         <span className="flex items-center gap-1">
                                 <DollarSign className="w-4 h-4" />
-                                {job.salary_range}
+                                {job.salaryRange}
                               </span>
                         }
                           </div>
@@ -282,10 +305,14 @@ const RecruiterDashboard = () => {
                         )}
                           </div>
                         </div>
-                        <div className="flex items-center gap-2">
-                          <Badge variant={job.is_active ? "default" : "outline"}>
-                            {job.is_active ? "Active" : "Inactive"}
+                        <div className="flex flex-col items-end gap-3">
+                          <Badge variant={job.isActive ? "default" : "outline"}>
+                            {job.isActive ? "Active" : "Inactive"}
                           </Badge>
+                          <Button variant="outline" size="sm" onClick={() => handleViewApplicants(job)}>
+                            <Users className="w-4 h-4 mr-2" />
+                            Applicants
+                          </Button>
                         </div>
                       </div>
                     </motion.div>
@@ -309,6 +336,49 @@ const RecruiterDashboard = () => {
           </Card>
         </div>
       </main>
+
+      <Dialog open={isApplicantsDialogOpen} onOpenChange={setIsApplicantsDialogOpen}>
+        <DialogContent className="max-w-3xl max-h-[90vh] overflow-y-auto">
+          <DialogHeader>
+            <DialogTitle>Applicants for: {selectedJob?.title}</DialogTitle>
+          </DialogHeader>
+          <div className="mt-4">
+            {isLoadingApplicants ? (
+              <div className="flex items-center justify-center py-8">
+                <Loader2 className="w-8 h-8 animate-spin text-primary" />
+              </div>
+            ) : applicants && applicants.length > 0 ? (
+              <div className="space-y-4">
+                {applicants.map((app) => (
+                  <div key={app._id} className="p-4 rounded-lg border border-border flex justify-between items-center">
+                    <div>
+                      <h4 className="font-semibold text-lg">{app.studentId?.fullName}</h4>
+                      <p className="text-sm text-muted-foreground">{app.studentId?.email}</p>
+                      <Badge variant="secondary" className="mt-2">
+                        AI Match Score: {app.matchScore}%
+                      </Badge>
+                    </div>
+                    <div>
+                      {app.resumeId?.fileUrl ? (
+                        <a href={app.resumeId.fileUrl} target="_blank" rel="noreferrer" className="text-primary hover:underline text-sm font-medium flex items-center">
+                          View Resume
+                        </a>
+                      ) : (
+                        <span className="text-sm text-muted-foreground">No resume link</span>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="text-center py-8 text-muted-foreground">
+                <Users className="w-12 h-12 mx-auto mb-4 opacity-20" />
+                No one has applied to this job yet.
+              </div>
+            )}
+          </div>
+        </DialogContent>
+      </Dialog>
 
       <Footer />
     </div>);

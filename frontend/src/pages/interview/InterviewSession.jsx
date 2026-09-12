@@ -267,14 +267,14 @@ export default function InterviewSession() {
 
       <Progress value={(answeredCount / totalQuestions) * 100} className="h-1.5 mb-6" />
 
-      <div className="grid md:grid-cols-[200px_1fr] gap-6">
+      <div className="grid md:grid-cols-[280px_1fr] gap-8">
         {/* Avatar rail */}
-        <div className="flex md:flex-col items-center md:items-stretch gap-4">
+        <div className="flex md:flex-col items-center md:items-stretch gap-6">
           <div className="flex justify-center md:pt-4">
-            <AiAvatar state={avatarState} />
+            <AiAvatar state={avatarState} size={200} />
           </div>
-          <div className="w-24 md:w-full max-w-[200px] mx-auto hidden sm:block">
-            <WebcamView />
+          <div className="w-32 md:w-full max-w-[280px] mx-auto">
+            <WebcamView className="shadow-lg border-2 border-border/50" />
           </div>
           <div className="flex-1 md:flex-none flex flex-col gap-2">
             <InterviewTimer

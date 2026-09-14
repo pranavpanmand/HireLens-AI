@@ -5,7 +5,8 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, Mic, MicOff, Square, Send, ArrowRight, Pencil, RotateCcw,
   CheckCircle2, XCircle, AlertCircle, Lightbulb, Volume2, PhoneOff, Keyboard,
-  Code, MessageSquare, Maximize2, Minimize2, ShieldAlert, MonitorX
+  Code, MessageSquare, Maximize2, Minimize2, ShieldAlert, MonitorX,
+  Monitor, Eye, Copy, Mouse, Columns2, Timer, Fingerprint, BookOpen
 } from "lucide-react";
 
 import Editor from "@monaco-editor/react";
@@ -94,6 +95,7 @@ export default function InterviewSession() {
   const [isEditorExpanded, setIsEditorExpanded] = useState(false);
 
   // ---- Anti-cheat: Fullscreen + Tab-switch detection ----
+  const [hasAcceptedRules, setHasAcceptedRules] = useState(false);
   const [isFullscreen, setIsFullscreen] = useState(false);
   const [showFullscreenWarning, setShowFullscreenWarning] = useState(false);
   const [tabSwitchCount, setTabSwitchCount] = useState(0);
@@ -101,9 +103,9 @@ export default function InterviewSession() {
   const interviewContainerRef = useRef(null);
   const MAX_VIOLATIONS = 5;
 
-  // Request fullscreen when the interview session loads
+  // Request fullscreen when rules are accepted
   useEffect(() => {
-    if (!session || session.status === "completed") return;
+    if (!hasAcceptedRules || !session || session.status === "completed") return;
     const el = interviewContainerRef.current || document.documentElement;
     const enterFullscreen = async () => {
       try {
@@ -114,9 +116,9 @@ export default function InterviewSession() {
         console.warn("Fullscreen request denied:", err);
       }
     };
-    const timer = setTimeout(enterFullscreen, 500);
+    const timer = setTimeout(enterFullscreen, 300);
     return () => clearTimeout(timer);
-  }, [session]);
+  }, [hasAcceptedRules, session]);
 
   // Listen for fullscreen changes
   useEffect(() => {
@@ -127,7 +129,7 @@ export default function InterviewSession() {
         document.msFullscreenElement
       );
       setIsFullscreen(isFull);
-      if (!isFull && session && session.status !== "completed") {
+      if (!isFull && hasAcceptedRules && session && session.status !== "completed") {
         setShowFullscreenWarning(true);
       }
     };
@@ -167,7 +169,7 @@ export default function InterviewSession() {
 
   // Detect tab switching / window blur (covers Alt+Tab too)
   useEffect(() => {
-    if (!session || session.status === "completed") return;
+    if (!hasAcceptedRules || !session || session.status === "completed") return;
     const handleVisibilityChange = () => {
       if (document.hidden) addViolation("Tab switch detected!");
     };
@@ -184,7 +186,7 @@ export default function InterviewSession() {
 
   // Block keyboard shortcuts (Ctrl+C, Ctrl+V, Ctrl+T, Ctrl+Tab, Ctrl+Shift+I, F12, etc.)
   useEffect(() => {
-    if (!session || session.status === "completed") return;
+    if (!hasAcceptedRules || !session || session.status === "completed") return;
     const handleKeyDown = (e) => {
       // Allow normal typing in textareas and inputs
       const tag = e.target.tagName;
@@ -234,7 +236,7 @@ export default function InterviewSession() {
 
   // Block right-click context menu
   useEffect(() => {
-    if (!session || session.status === "completed") return;
+    if (!hasAcceptedRules || !session || session.status === "completed") return;
     const handleContextMenu = (e) => {
       // Allow right-click inside Monaco editor only
       if (e.target.closest(".monaco-editor")) return;
@@ -247,7 +249,7 @@ export default function InterviewSession() {
 
   // Block copy/paste/cut events globally (except inside Monaco editor)
   useEffect(() => {
-    if (!session || session.status === "completed") return;
+    if (!hasAcceptedRules || !session || session.status === "completed") return;
     const blockClipboard = (e) => {
       if (e.target.closest(".monaco-editor")) return;
       e.preventDefault();
@@ -264,7 +266,7 @@ export default function InterviewSession() {
 
   // Detect window resize (split screen cheating)
   useEffect(() => {
-    if (!session || session.status === "completed") return;
+    if (!hasAcceptedRules || !session || session.status === "completed") return;
     const expectedW = window.screen.width;
     const expectedH = window.screen.height;
     const handleResize = () => {
@@ -279,7 +281,7 @@ export default function InterviewSession() {
 
   // Disable text selection via CSS (except in editable areas)
   useEffect(() => {
-    if (!session || session.status === "completed") return;
+    if (!hasAcceptedRules || !session || session.status === "completed") return;
     document.body.classList.add("interview-lockdown");
     return () => document.body.classList.remove("interview-lockdown");
   }, [session]);
@@ -516,6 +518,94 @@ export default function InterviewSession() {
           <Button variant="outline" onClick={() => refetch()}>Try again</Button>
           <Button asChild><Link to="/interview">Back to Interview Coach</Link></Button>
         </div>
+      </div>
+    );
+  }
+
+  // ---- Pre-interview instructions screen ----
+  if (!hasAcceptedRules) {
+    return (
+      <div className="min-h-screen bg-background flex items-center justify-center p-4">
+        <motion.div
+          initial={{ opacity: 0, y: 30 }}
+          animate={{ opacity: 1, y: 0 }}
+          transition={{ duration: 0.5 }}
+          className="w-full max-w-2xl"
+        >
+          <div className="rounded-2xl border border-border bg-card shadow-2xl overflow-hidden">
+            {/* Header */}
+            <div className="bg-gradient-to-r from-primary/20 via-primary/10 to-transparent p-6 border-b border-border">
+              <div className="flex items-center gap-3 mb-2">
+                <div className="w-12 h-12 rounded-xl bg-primary/20 flex items-center justify-center">
+                  <BookOpen className="w-6 h-6 text-primary" />
+                </div>
+                <div>
+                  <h1 className="text-xl font-bold text-foreground">Interview Rules & Guidelines</h1>
+                  <p className="text-sm text-muted-foreground">Please read carefully before starting</p>
+                </div>
+              </div>
+            </div>
+
+            {/* Interview info */}
+            <div className="px-6 pt-4 pb-2">
+              <div className="flex flex-wrap gap-2 text-xs">
+                <Badge variant="secondary">{session.jobTitle}</Badge>
+                {session.company && <Badge variant="outline">{session.company}</Badge>}
+                <Badge variant="outline">{totalQuestions} Questions</Badge>
+                <Badge variant="outline" className="capitalize">{session.interviewType || "Mixed"}</Badge>
+              </div>
+            </div>
+
+            {/* Rules list */}
+            <div className="p-6 space-y-3">
+              {[
+                { icon: Monitor, color: "text-blue-500", title: "Fullscreen Required", desc: "Your browser will enter fullscreen mode. You must stay in fullscreen throughout the interview." },
+                { icon: Eye, color: "text-amber-500", title: "Camera Monitoring", desc: "Your webcam feed will be visible during the interview for proctoring purposes." },
+                { icon: AlertCircle, color: "text-red-500", title: "Tab Switching Detected", desc: "Switching tabs or windows (Alt+Tab) will be recorded as a violation." },
+                { icon: Copy, color: "text-orange-500", title: "Copy/Paste Disabled", desc: "Copy, paste, and cut are disabled outside the code editor to prevent cheating." },
+                { icon: Mouse, color: "text-purple-500", title: "Right-Click Disabled", desc: "Right-click context menu is blocked during the interview session." },
+                { icon: Columns2, color: "text-cyan-500", title: "Split-Screen Detection", desc: "Resizing or splitting the browser window will be flagged as a violation." },
+                { icon: Fingerprint, color: "text-emerald-500", title: "DevTools Blocked", desc: "Keyboard shortcuts for browser DevTools (F12, Ctrl+Shift+I) are disabled." },
+                { icon: Timer, color: "text-red-600", title: "Auto-Termination", desc: `After ${MAX_VIOLATIONS} violations, your interview will be automatically ended and scored.` },
+              ].map(({ icon: Icon, color, title, desc }) => (
+                <div key={title} className="flex gap-3 items-start p-3 rounded-lg bg-muted/50 hover:bg-muted transition-colors">
+                  <Icon className={cn("w-5 h-5 mt-0.5 shrink-0", color)} />
+                  <div>
+                    <p className="text-sm font-semibold text-foreground">{title}</p>
+                    <p className="text-xs text-muted-foreground leading-relaxed">{desc}</p>
+                  </div>
+                </div>
+              ))}
+            </div>
+
+            {/* Warning */}
+            <div className="px-6 pb-4">
+              <div className="bg-amber-500/10 border border-amber-500/30 rounded-lg p-3 flex gap-2 items-start">
+                <ShieldAlert className="w-5 h-5 text-amber-500 shrink-0 mt-0.5" />
+                <p className="text-xs text-amber-700 dark:text-amber-400 leading-relaxed">
+                  <strong>Important:</strong> Once you click the button below, your browser will enter fullscreen mode
+                  and all anti-cheating measures will activate. Make sure you are ready, your webcam is working,
+                  and you are in a quiet environment.
+                </p>
+              </div>
+            </div>
+
+            {/* Start button */}
+            <div className="p-6 pt-2 border-t border-border bg-muted/30">
+              <Button
+                onClick={() => setHasAcceptedRules(true)}
+                size="lg"
+                className="w-full gap-2 text-base font-bold h-12 bg-gradient-primary hover:opacity-90"
+              >
+                <ShieldAlert className="w-5 h-5" />
+                I Understand, Begin Interview
+              </Button>
+              <p className="text-[10px] text-muted-foreground text-center mt-3">
+                By clicking above, you agree to the proctoring guidelines and acknowledge that violations will be recorded.
+              </p>
+            </div>
+          </div>
+        </motion.div>
       </div>
     );
   }

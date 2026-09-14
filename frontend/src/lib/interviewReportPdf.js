@@ -172,29 +172,49 @@ export function buildInterviewReportHtml(session) {
  * can surface a message instead of failing silently.
  */
 export function openPrintWindow(html) {
-  const win = window.open("", "_blank", "noopener,noreferrer,width=900,height=1000");
-  if (!win) return false;
+  // Use a hidden iframe to bypass popup blockers
+  const iframe = document.createElement("iframe");
+  iframe.style.position = "fixed";
+  iframe.style.right = "0";
+  iframe.style.bottom = "0";
+  iframe.style.width = "0";
+  iframe.style.height = "0";
+  iframe.style.border = "0";
+  document.body.appendChild(iframe);
 
-  win.document.open();
-  win.document.write(html);
-  win.document.close();
+  try {
+    const doc = iframe.contentWindow.document;
+    doc.open();
+    doc.write(html);
+    doc.close();
 
-  // Give the browser a tick to lay the document out before printing.
-  win.onload = () => {
-    win.focus();
-    win.print();
-  };
-  // Safari sometimes fires load before the handler is attached.
-  setTimeout(() => {
-    try {
-      if (win.document.readyState === "complete") {
-        win.focus();
-        win.print();
+    const doPrint = () => {
+      iframe.contentWindow.focus();
+      iframe.contentWindow.print();
+      // Clean up after print dialog is closed
+      setTimeout(() => {
+        if (document.body.contains(iframe)) {
+          document.body.removeChild(iframe);
+        }
+      }, 1000);
+    };
+
+    // Give the browser a tick to lay the document out before printing.
+    iframe.onload = doPrint;
+    
+    // Fallback for browsers that don't reliably fire onload for written iframes
+    setTimeout(() => {
+      if (document.body.contains(iframe)) {
+        doPrint();
       }
-    } catch {
-      /* window closed by the user */
-    }
-  }, 500);
+    }, 1000);
 
-  return true;
+    return true;
+  } catch (err) {
+    console.error("Failed to generate PDF:", err);
+    if (document.body.contains(iframe)) {
+      document.body.removeChild(iframe);
+    }
+    return false;
+  }
 }

@@ -7,6 +7,7 @@ import {
   Loader2, AlertCircle, ArrowLeft, Download, RotateCcw, Trophy, TrendingUp,
   CheckCircle2, AlertTriangle, Lightbulb, MessageSquare, ChevronDown,
 } from "lucide-react";
+import { toast } from "react-toastify";
 
 import { Button } from "@/components/ui/button";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
@@ -56,7 +57,10 @@ export default function InterviewReport() {
 
   const handleDownload = () => {
     const html = buildInterviewReportHtml(session);
-    openPrintWindow(html);
+    const success = openPrintWindow(html);
+    if (!success) {
+      toast.error("Could not generate PDF. Check if popups or scripts are blocked by your browser.");
+    }
   };
 
   if (isLoading) {

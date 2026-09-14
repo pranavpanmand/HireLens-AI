@@ -19,6 +19,7 @@ import { cn } from "@/lib/utils";
 import { InterviewFeedbackDialog } from "@/components/interview/InterviewFeedbackDialog";
 import { useInterviewReport, normalizeOverallScore } from "@/hooks/useMockInterview";
 import { buildInterviewReportHtml, openPrintWindow } from "@/lib/interviewReportPdf";
+import { useAuth } from "@/contexts/AuthContext";
 
 const CATEGORY_LABELS = {
   technical: "Technical Knowledge",
@@ -37,6 +38,7 @@ const scoreTone = (score) => {
 export default function InterviewReport() {
   const { sessionId } = useParams();
   const navigate = useNavigate();
+  const { user } = useAuth();
   const { data: session, isLoading, isError, error, refetch } = useInterviewReport(sessionId);
   const [feedbackOpen, setFeedbackOpen] = useState(false);
   const [openAnswer, setOpenAnswer] = useState(null);
@@ -56,7 +58,7 @@ export default function InterviewReport() {
   const overall = normalizeOverallScore(session?.overallScore);
 
   const handleDownload = () => {
-    const html = buildInterviewReportHtml(session);
+    const html = buildInterviewReportHtml(session, user);
     const success = openPrintWindow(html);
     if (!success) {
       toast.error("Could not generate PDF. Check if popups or scripts are blocked by your browser.");

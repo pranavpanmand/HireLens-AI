@@ -243,9 +243,21 @@ export function openPrintWindow(html) {
     doc.write(html);
     doc.close();
 
+    // Extract the title from the HTML to use as the default PDF filename
+    const titleMatch = html.match(/<title>(.*?)<\/title>/);
+    const pdfTitle = titleMatch ? titleMatch[1] : "Interview Report";
+
     const doPrint = () => {
+      // Temporarily change the parent document title so the browser uses it as the filename
+      const originalTitle = document.title;
+      document.title = pdfTitle;
+      
       iframe.contentWindow.focus();
       iframe.contentWindow.print();
+      
+      // Restore original title immediately after print dialog opens
+      document.title = originalTitle;
+
       // Clean up after print dialog is closed
       setTimeout(() => {
         if (document.body.contains(iframe)) {

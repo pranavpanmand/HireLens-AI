@@ -26,10 +26,8 @@ const AlertDialogOverlay = React.forwardRef(
 AlertDialogOverlay.displayName = AlertDialogPrimitive.Overlay.displayName;
 
 const AlertDialogContent = React.forwardRef(
-
-
-  ({ className, ...props }, ref) =>
-  <AlertDialogPortal>
+  ({ className, container, ...props }, ref) =>
+  <AlertDialogPortal container={container}>
     <AlertDialogOverlay />
     <AlertDialogPrimitive.Content
       ref={ref}

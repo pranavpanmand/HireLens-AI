@@ -1074,7 +1074,7 @@ export default function InterviewSession() {
       </div>
 
       <AlertDialog open={showEndConfirm} onOpenChange={setShowEndConfirm}>
-        <AlertDialogContent>
+        <AlertDialogContent container={interviewContainerRef.current}>
           <AlertDialogHeader>
             <AlertDialogTitle>End the interview now?</AlertDialogTitle>
             <AlertDialogDescription>

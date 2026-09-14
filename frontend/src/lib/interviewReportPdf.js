@@ -91,7 +91,7 @@ export function buildInterviewReportHtml(session, user) {
 <html lang="en">
 <head>
 <meta charset="utf-8">
-<title>Interview Report — ${esc(session.jobTitle)}</title>
+<title>HireLens AI - ${esc(session.jobTitle)}${session.company ? ` - ${esc(session.company)}` : ""} - ${formatDate(session.completedAt || session.createdAt)}</title>
 <style>
   :root { color-scheme: light; }
   * { box-sizing: border-box; }

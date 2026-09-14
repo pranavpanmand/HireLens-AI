@@ -199,7 +199,7 @@ export function ChatbotWidget() {
   };
 
   return (
-    <>
+    <div id="chatbot-widget">
       <AnimatePresence>
         {!isOpen && (
           <motion.button
@@ -445,6 +445,6 @@ export function ChatbotWidget() {
           </motion.div>
         )}
       </AnimatePresence>
-    </>
+    </div>
   );
 }

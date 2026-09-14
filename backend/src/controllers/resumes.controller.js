@@ -175,3 +175,6 @@ const setPrimaryResume = async (req, res, next) => {
 };
 exports.setPrimaryResume = setPrimaryResume;
 //# sourceMappingURL=resumes.controller.js.map
+
+
+

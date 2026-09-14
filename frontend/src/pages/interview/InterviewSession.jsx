@@ -5,7 +5,7 @@ import { motion, AnimatePresence } from "framer-motion";
 import {
   Loader2, Mic, MicOff, Square, Send, ArrowRight, Pencil, RotateCcw,
   CheckCircle2, XCircle, AlertCircle, Lightbulb, Volume2, PhoneOff, Keyboard,
-  Code, MessageSquare, Maximize2, Minimize2
+  Code, MessageSquare, Maximize2, Minimize2, ShieldAlert, MonitorX
 } from "lucide-react";
 
 import Editor from "@monaco-editor/react";
@@ -92,6 +92,228 @@ export default function InterviewSession() {
   const [isCodeMode, setIsCodeMode] = useState(false);
   const [codeLanguage, setCodeLanguage] = useState("javascript");
   const [isEditorExpanded, setIsEditorExpanded] = useState(false);
+
+  // ---- Anti-cheat: Fullscreen + Tab-switch detection ----
+  const [isFullscreen, setIsFullscreen] = useState(false);
+  const [showFullscreenWarning, setShowFullscreenWarning] = useState(false);
+  const [tabSwitchCount, setTabSwitchCount] = useState(0);
+  const [autoTerminated, setAutoTerminated] = useState(false);
+  const interviewContainerRef = useRef(null);
+  const MAX_VIOLATIONS = 5;
+
+  // Request fullscreen when the interview session loads
+  useEffect(() => {
+    if (!session || session.status === "completed") return;
+    const el = interviewContainerRef.current || document.documentElement;
+    const enterFullscreen = async () => {
+      try {
+        if (el.requestFullscreen) await el.requestFullscreen();
+        else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+        else if (el.msRequestFullscreen) await el.msRequestFullscreen();
+      } catch (err) {
+        console.warn("Fullscreen request denied:", err);
+      }
+    };
+    const timer = setTimeout(enterFullscreen, 500);
+    return () => clearTimeout(timer);
+  }, [session]);
+
+  // Listen for fullscreen changes
+  useEffect(() => {
+    const handleFullscreenChange = () => {
+      const isFull = !!(
+        document.fullscreenElement ||
+        document.webkitFullscreenElement ||
+        document.msFullscreenElement
+      );
+      setIsFullscreen(isFull);
+      if (!isFull && session && session.status !== "completed") {
+        setShowFullscreenWarning(true);
+      }
+    };
+    document.addEventListener("fullscreenchange", handleFullscreenChange);
+    document.addEventListener("webkitfullscreenchange", handleFullscreenChange);
+    return () => {
+      document.removeEventListener("fullscreenchange", handleFullscreenChange);
+      document.removeEventListener("webkitfullscreenchange", handleFullscreenChange);
+    };
+  }, [session]);
+
+  // Helper: add a violation
+  const addViolation = useCallback((reason) => {
+    setTabSwitchCount((c) => {
+      const next = c + 1;
+      toast.error(`🚫 ${reason} (Violation ${next}/${MAX_VIOLATIONS})`, { autoClose: 4000 });
+      if (next >= MAX_VIOLATIONS) {
+        setAutoTerminated(true);
+        toast.error("❌ Interview auto-terminated due to repeated violations.", { autoClose: 8000 });
+      }
+      return next;
+    });
+  }, []);
+
+  // Auto-terminate: navigate to report when limit exceeded
+  useEffect(() => {
+    if (autoTerminated && sessionId) {
+      const timer = setTimeout(async () => {
+        try {
+          await finishInterview(sessionId);
+        } catch (_) { /* best effort */ }
+        navigate(`/interview/report/${sessionId}`, { replace: true });
+      }, 2000);
+      return () => clearTimeout(timer);
+    }
+  }, [autoTerminated, sessionId, finishInterview, navigate]);
+
+  // Detect tab switching / window blur (covers Alt+Tab too)
+  useEffect(() => {
+    if (!session || session.status === "completed") return;
+    const handleVisibilityChange = () => {
+      if (document.hidden) addViolation("Tab switch detected!");
+    };
+    const handleWindowBlur = () => {
+      if (!document.hidden) addViolation("Window focus lost!");
+    };
+    document.addEventListener("visibilitychange", handleVisibilityChange);
+    window.addEventListener("blur", handleWindowBlur);
+    return () => {
+      document.removeEventListener("visibilitychange", handleVisibilityChange);
+      window.removeEventListener("blur", handleWindowBlur);
+    };
+  }, [session, addViolation]);
+
+  // Block keyboard shortcuts (Ctrl+C, Ctrl+V, Ctrl+T, Ctrl+Tab, Ctrl+Shift+I, F12, etc.)
+  useEffect(() => {
+    if (!session || session.status === "completed") return;
+    const handleKeyDown = (e) => {
+      // Allow normal typing in textareas and inputs
+      const tag = e.target.tagName;
+      const isEditable = tag === "TEXTAREA" || tag === "INPUT" || e.target.isContentEditable;
+      const isMonaco = e.target.closest(".monaco-editor");
+
+      // Block F12 (DevTools)
+      if (e.key === "F12") {
+        e.preventDefault();
+        e.stopPropagation();
+        addViolation("DevTools shortcut blocked!");
+        return;
+      }
+
+      // Block Ctrl/Cmd shortcuts
+      if (e.ctrlKey || e.metaKey) {
+        const blocked = ["c", "v", "x", "t", "n", "w", "u", "s", "p", "g", "f", "h", "j", "l"];
+        // Allow Ctrl+A, Ctrl+Z, Ctrl+Shift+Z inside editable fields
+        if (blocked.includes(e.key.toLowerCase())) {
+          // Allow copy/paste/cut ONLY inside the code editor (Monaco)
+          if (isMonaco && ["c", "v", "x", "a", "z"].includes(e.key.toLowerCase())) return;
+          e.preventDefault();
+          e.stopPropagation();
+          if (["c", "v", "x"].includes(e.key.toLowerCase())) {
+            addViolation("Copy/Paste blocked!");
+          }
+          return;
+        }
+        // Block Ctrl+Shift+I (DevTools), Ctrl+Shift+J (Console)
+        if (e.shiftKey && ["i", "j", "c"].includes(e.key.toLowerCase())) {
+          e.preventDefault();
+          e.stopPropagation();
+          addViolation("DevTools shortcut blocked!");
+          return;
+        }
+      }
+
+      // Block Alt+Tab notification (can't actually prevent but blur catches it)
+      if (e.altKey && e.key === "Tab") {
+        e.preventDefault();
+        return;
+      }
+    };
+    document.addEventListener("keydown", handleKeyDown, true);
+    return () => document.removeEventListener("keydown", handleKeyDown, true);
+  }, [session, addViolation]);
+
+  // Block right-click context menu
+  useEffect(() => {
+    if (!session || session.status === "completed") return;
+    const handleContextMenu = (e) => {
+      // Allow right-click inside Monaco editor only
+      if (e.target.closest(".monaco-editor")) return;
+      e.preventDefault();
+      addViolation("Right-click blocked!");
+    };
+    document.addEventListener("contextmenu", handleContextMenu);
+    return () => document.removeEventListener("contextmenu", handleContextMenu);
+  }, [session, addViolation]);
+
+  // Block copy/paste/cut events globally (except inside Monaco editor)
+  useEffect(() => {
+    if (!session || session.status === "completed") return;
+    const blockClipboard = (e) => {
+      if (e.target.closest(".monaco-editor")) return;
+      e.preventDefault();
+    };
+    document.addEventListener("copy", blockClipboard);
+    document.addEventListener("paste", blockClipboard);
+    document.addEventListener("cut", blockClipboard);
+    return () => {
+      document.removeEventListener("copy", blockClipboard);
+      document.removeEventListener("paste", blockClipboard);
+      document.removeEventListener("cut", blockClipboard);
+    };
+  }, [session]);
+
+  // Detect window resize (split screen cheating)
+  useEffect(() => {
+    if (!session || session.status === "completed") return;
+    const expectedW = window.screen.width;
+    const expectedH = window.screen.height;
+    const handleResize = () => {
+      // Only trigger if the window is significantly smaller than the screen (split-screen)
+      if (document.fullscreenElement && (window.innerWidth < expectedW * 0.9 || window.innerHeight < expectedH * 0.9)) {
+        addViolation("Window resize / split-screen detected!");
+      }
+    };
+    window.addEventListener("resize", handleResize);
+    return () => window.removeEventListener("resize", handleResize);
+  }, [session, addViolation]);
+
+  // Disable text selection via CSS (except in editable areas)
+  useEffect(() => {
+    if (!session || session.status === "completed") return;
+    document.body.classList.add("interview-lockdown");
+    return () => document.body.classList.remove("interview-lockdown");
+  }, [session]);
+
+  // Re-enter fullscreen helper
+  const reEnterFullscreen = async () => {
+    const el = interviewContainerRef.current || document.documentElement;
+    try {
+      if (el.requestFullscreen) await el.requestFullscreen();
+      else if (el.webkitRequestFullscreen) await el.webkitRequestFullscreen();
+      else if (el.msRequestFullscreen) await el.msRequestFullscreen();
+      setShowFullscreenWarning(false);
+    } catch (err) {
+      console.warn("Fullscreen re-entry failed:", err);
+    }
+  };
+
+  // Exit fullscreen on unmount (when interview ends / navigates away)
+  useEffect(() => {
+    return () => {
+      if (document.fullscreenElement) {
+        document.exitFullscreen().catch(() => {});
+      }
+    };
+  }, []);
+
+  // Hide chatbot widget during interview
+  useEffect(() => {
+    const chatbot = document.getElementById("chatbot-widget");
+    if (chatbot) chatbot.style.display = "none";
+    return () => {
+      if (chatbot) chatbot.style.display = "";
+    };
+  }, []);
 
   const questions = session?.questions || [];
   const totalQuestions = questions.length;
@@ -299,6 +521,46 @@ export default function InterviewSession() {
   }
 
   return (
+    <div ref={interviewContainerRef} className="min-h-screen bg-background">
+      {/* Fullscreen exit warning overlay */}
+      {showFullscreenWarning && (
+        <div className="fixed inset-0 z-[9999] bg-black/80 backdrop-blur-md flex items-center justify-center">
+          <motion.div
+            initial={{ scale: 0.8, opacity: 0 }}
+            animate={{ scale: 1, opacity: 1 }}
+            className="bg-card border border-destructive/50 rounded-2xl p-8 max-w-md text-center shadow-2xl"
+          >
+            <MonitorX className="w-16 h-16 text-destructive mx-auto mb-4" />
+            <h2 className="text-xl font-bold text-foreground mb-2">Fullscreen Mode Required</h2>
+            <p className="text-sm text-muted-foreground mb-6">
+              You exited fullscreen mode. To maintain interview integrity,
+              please return to fullscreen to continue your session.
+            </p>
+            <Button onClick={reEnterFullscreen} size="lg" className="w-full gap-2">
+              <Maximize2 className="w-5 h-5" /> Return to Fullscreen
+            </Button>
+          </motion.div>
+        </div>
+      )}
+
+      {/* Tab-switch violation banner */}
+      {tabSwitchCount > 0 && (
+        <div className={cn(
+          "sticky top-0 z-50 text-center py-2 text-xs font-bold flex items-center justify-center gap-2 transition-colors",
+          tabSwitchCount >= MAX_VIOLATIONS - 1
+            ? "bg-red-600 text-white animate-pulse"
+            : tabSwitchCount >= 3
+            ? "bg-red-500/90 text-white"
+            : "bg-amber-500/90 text-black"
+        )}>
+          <ShieldAlert className="w-4 h-4" />
+          {tabSwitchCount >= MAX_VIOLATIONS
+            ? "⛔ Interview terminated due to repeated violations!"
+            : `⚠️ ${tabSwitchCount}/${MAX_VIOLATIONS} violations — ${MAX_VIOLATIONS - tabSwitchCount} remaining before auto-termination`
+          }
+        </div>
+      )}
+
     <main className="container mx-auto px-4 py-6 max-w-4xl">
       {/* Header: progress + end button */}
       <div className="flex items-center justify-between gap-4 mb-4">
@@ -737,5 +999,6 @@ export default function InterviewSession() {
         </AlertDialogContent>
       </AlertDialog>
     </main>
+    </div>
   );
 }

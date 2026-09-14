@@ -97,52 +97,67 @@ export function buildInterviewReportHtml(session, user) {
   * { box-sizing: border-box; }
   body {
     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
-    color: #18181b; background: #fff; margin: 0; padding: 40px; line-height: 1.55;
+    color: #18181b; background: #f4f4f5; margin: 0; padding: 40px; line-height: 1.55;
     -webkit-print-color-adjust: exact; print-color-adjust: exact;
   }
-  .wrap { max-width: 760px; margin: 0 auto; }
-  header { border-bottom: 2px solid #e4e4e7; padding-bottom: 20px; margin-bottom: 24px; }
+  .wrap { max-width: 800px; margin: 0 auto; padding: 48px; background: #fff; border: 1px solid #e4e4e7; border-radius: 16px; box-shadow: 0 10px 25px -5px rgba(0,0,0,0.05); }
+  header { border-bottom: 2px solid #e4e4e7; padding-bottom: 24px; margin-bottom: 28px; }
   .header-grid { display: grid; grid-template-columns: 1fr auto; align-items: start; gap: 20px; }
-  .brand { font-size: 12px; letter-spacing: .12em; text-transform: uppercase; color: #6366f1; font-weight: 700; margin: 0; }
-  h1 { font-size: 26px; margin: 6px 0 4px; }
-  .dev-badge { text-align: right; background: #f4f4f5; padding: 12px 16px; border-radius: 8px; }
-  .dev-name { margin: 0; font-size: 13px; color: #3f3f46; }
-  .dev-link { font-size: 12px; color: #6366f1; text-decoration: none; font-weight: 600; }
-  .dev-link:hover { text-decoration: underline; }
+  .brand { font-size: 13px; letter-spacing: .12em; text-transform: uppercase; color: #4f46e5; font-weight: 700; margin: 0; }
+  h1 { font-size: 28px; margin: 8px 0 6px; letter-spacing: -0.02em; }
   
-  .details-card { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; background: #fafafa; border: 1px solid #e4e4e7; border-radius: 10px; padding: 20px; margin-bottom: 28px; }
-  .detail-group h3 { margin: 0 0 6px; font-size: 10px; text-transform: uppercase; color: #71717a; letter-spacing: 0.08em; }
-  .detail-group p { margin: 0 0 2px; font-size: 13.5px; color: #3f3f46; }
-  .detail-group .primary { font-weight: 600; color: #18181b; font-size: 15px; }
+  .dev-badge { text-align: right; background: #fff; border: 1px solid #e4e4e7; padding: 14px 20px; border-radius: 10px; box-shadow: 0 2px 4px rgba(0,0,0,0.02); }
+  .dev-name { margin: 0; font-size: 14px; color: #18181b; }
+  .dev-links { display: flex; gap: 12px; margin-top: 6px; justify-content: flex-end; align-items: center; }
+  .dev-link { font-size: 12.5px; color: #4f46e5; text-decoration: none; font-weight: 600; transition: color 0.2s; }
+  .dev-link:hover { color: #3730a3; text-decoration: underline; }
+  .divider { color: #d4d4d8; font-size: 12px; }
+  
+  .details-card { display: grid; grid-template-columns: 1fr 1fr; gap: 24px; background: #fafafa; border: 1px solid #e4e4e7; border-radius: 12px; padding: 24px; margin-bottom: 32px; box-shadow: inset 0 2px 4px rgba(0,0,0,0.01); }
+  .detail-group h3 { margin: 0 0 8px; font-size: 11px; text-transform: uppercase; color: #71717a; letter-spacing: 0.1em; font-weight: 700; }
+  .detail-group p { margin: 0 0 4px; font-size: 14px; color: #3f3f46; }
+  .detail-group .primary { font-weight: 600; color: #18181b; font-size: 16px; }
 
-  .hero { display: flex; align-items: center; gap: 24px; margin: 0 0 28px;
-          background: #f4f4f5; border-radius: 12px; padding: 22px 24px; }
-  .big { font-size: 44px; font-weight: 800; line-height: 1; color: #4f46e5; }
-  .big small { font-size: 16px; color: #71717a; font-weight: 600; }
-  .narrative { margin: 0; font-size: 14px; color: #3f3f46; }
-  h2 { font-size: 15px; text-transform: uppercase; letter-spacing: .06em;
-       color: #52525b; margin: 28px 0 10px; }
-  table { width: 100%; border-collapse: collapse; font-size: 14px; }
-  td { padding: 7px 0; border-bottom: 1px solid #f4f4f5; vertical-align: middle; }
-  td.num { width: 92px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; }
-  td.bar-cell { width: 180px; padding-left: 16px; }
-  .bar { display: block; height: 7px; background: #e4e4e7; border-radius: 99px; overflow: hidden; }
-  .bar-fill { display: block; height: 100%; background: #6366f1; border-radius: 99px; }
-  ul { margin: 6px 0; padding-left: 20px; font-size: 14px; }
-  li { margin-bottom: 5px; }
-  .qa { padding: 14px 0; border-bottom: 1px solid #f4f4f5; page-break-inside: avoid; }
-  .q { font-weight: 600; font-size: 14px; margin: 0 0 6px; }
-  .qnum { display: inline-block; min-width: 20px; color: #6366f1; font-weight: 700; }
-  .score-line { font-size: 12px; color: #71717a; margin: 0 0 8px; }
+  .hero { display: flex; align-items: center; gap: 28px; margin: 0 0 32px;
+          background: linear-gradient(135deg, #f4f4f5 0%, #fafafa 100%); border: 1px solid #e4e4e7; border-radius: 12px; padding: 28px; }
+  .big { font-size: 48px; font-weight: 800; line-height: 1; color: #4f46e5; }
+  .big small { font-size: 18px; color: #71717a; font-weight: 600; }
+  .narrative { margin: 0; font-size: 15px; color: #3f3f46; }
+  
+  h2 { font-size: 16px; text-transform: uppercase; letter-spacing: .06em;
+       color: #18181b; margin: 32px 0 16px; padding-bottom: 8px; border-bottom: 1px solid #f4f4f5; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; margin-bottom: 24px; }
+  td { padding: 10px 0; border-bottom: 1px solid #f4f4f5; vertical-align: middle; }
+  td.num { width: 92px; text-align: right; font-variant-numeric: tabular-nums; font-weight: 600; color: #18181b; }
+  td.bar-cell { width: 200px; padding-left: 20px; }
+  .bar { display: block; height: 8px; background: #e4e4e7; border-radius: 99px; overflow: hidden; }
+  .bar-fill { display: block; height: 100%; background: #4f46e5; border-radius: 99px; }
+  
+  ul { margin: 8px 0 24px; padding-left: 24px; font-size: 14.5px; }
+  li { margin-bottom: 8px; color: #3f3f46; }
+  
+  .qa { padding: 20px; margin-bottom: 16px; border: 1px solid #e4e4e7; border-radius: 12px; page-break-inside: avoid; background: #fff; }
+  .q { font-weight: 600; font-size: 15px; margin: 0 0 10px; color: #18181b; }
+  .qnum { display: inline-flex; align-items: center; justify-content: center; width: 24px; height: 24px; background: #eef2ff; color: #4f46e5; font-weight: 700; border-radius: 6px; margin-right: 8px; font-size: 13px; }
+  .score-line { font-size: 13px; color: #71717a; margin: 0 0 12px; }
   .score-line.skipped { color: #a1a1aa; font-style: italic; }
-  .label { font-size: 10px; text-transform: uppercase; letter-spacing: .07em;
-           color: #a1a1aa; font-weight: 700; margin: 8px 0 2px; }
-  .answer { font-size: 13.5px; margin: 0; color: #3f3f46; white-space: pre-wrap; }
-  .answer.model { background: #eef2ff; border-left: 3px solid #6366f1;
-                  padding: 9px 12px; border-radius: 0 6px 6px 0; }
-  footer { margin-top: 34px; padding-top: 14px; border-top: 1px solid #e4e4e7;
-           font-size: 11px; color: #a1a1aa; text-align: center; }
-  @media print { body { padding: 0; } @page { margin: 18mm; } }
+  .label { font-size: 11px; text-transform: uppercase; letter-spacing: .08em;
+           color: #71717a; font-weight: 700; margin: 12px 0 4px; }
+  .answer { font-size: 14px; margin: 0; color: #3f3f46; white-space: pre-wrap; line-height: 1.6; }
+  .answer.model { background: #f8fafc; border-left: 3px solid #4f46e5;
+                  padding: 12px 16px; border-radius: 0 8px 8px 0; color: #1e293b; }
+                  
+  footer { margin-top: 48px; padding-top: 20px; border-top: 1px solid #e4e4e7;
+           font-size: 12px; color: #a1a1aa; text-align: center; }
+           
+  @media print { 
+    body { padding: 0; background: #fff; } 
+    .wrap { border: none; box-shadow: none; padding: 0; max-width: 100%; }
+    .hero { border: none; background: #fafafa; }
+    .details-card { border: none; background: #fafafa; }
+    .qa { border-color: #f4f4f5; }
+    @page { margin: 15mm; } 
+  }
 </style>
 </head>
 <body>
@@ -157,7 +172,11 @@ export function buildInterviewReportHtml(session, user) {
       </div>
       <div class="dev-badge">
         <p class="dev-name"><strong>Developed by Pranav Panmand</strong></p>
-        <a href="https://github.com/pranavpanmand" target="_blank" class="dev-link">View Portfolio & GitHub →</a>
+        <div class="dev-links">
+          <a href="https://pranav-panmand-portfolio.netlify.app/" target="_blank" class="dev-link">Portfolio →</a>
+          <span class="divider">|</span>
+          <a href="https://github.com/pranavpanmand" target="_blank" class="dev-link">GitHub →</a>
+        </div>
       </div>
     </div>
   </header>

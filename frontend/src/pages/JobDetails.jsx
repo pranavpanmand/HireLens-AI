@@ -11,6 +11,7 @@ import { useSavedJobs, useToggleSaveJob } from "@/hooks/useSavedJobs";
 import DOMPurify from 'dompurify';
 import { toast } from "react-toastify";
 import { API_URL } from "@/services/api";
+import { ShareMenu } from "@/components/jobs/ShareMenu";
 
 export default function JobDetails() {
   const { id } = useParams();
@@ -195,6 +196,9 @@ export default function JobDetails() {
                   <p className="text-xl text-muted-foreground mb-4">{job.company}</p>
                 </div>
                 <div className="flex items-center gap-3">
+                  <div className="border border-border rounded-md bg-background">
+                    <ShareMenu job={job} />
+                  </div>
                   <Button variant="outline" size="icon" onClick={handleSaveClick}>
                     <Bookmark className={`w-5 h-5 transition-colors ${isSaved ? "fill-primary text-primary" : "text-muted-foreground"}`} />
                   </Button>

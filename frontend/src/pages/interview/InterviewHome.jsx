@@ -139,6 +139,11 @@ export default function InterviewHome() {
                   <Mic className="w-4 h-4" /> Start mock interview
                 </Link>
               </Button>
+              <Button size="lg" variant="outline" asChild className="gap-2">
+                <Link to="/interview/progress">
+                  <TrendingUp className="w-4 h-4" /> View Progress Dashboard
+                </Link>
+              </Button>
               <Button variant="outline" asChild className="gap-2">
                 <Link to="/interview/history">
                   <History className="w-4 h-4" /> View history

@@ -27,6 +27,7 @@ import { Badge } from "@/components/ui/badge";
 import { Link } from "react-router-dom";
 import { useSavedJobs, useToggleSaveJob } from "@/hooks/useSavedJobs";
 import { useAuth } from "@/contexts/AuthContext";
+import { ShareMenu } from "./ShareMenu";
 
 import { SpotlightCard } from "@/components/ui/SpotlightCard";
 
@@ -78,16 +79,21 @@ export const JobCard = ({ job, onAnalyze, index = 0 }) => {
                 <p className="text-muted-foreground text-sm truncate">{job.company}</p>
               </div>
 
-              <button onClick={handleSaveClick} className="p-2 -mr-2 -mt-2 rounded-lg hover:bg-muted/50 backdrop-blur-sm transition-colors flex-shrink-0 relative z-[20]">
-                  <motion.div
-                    whileTap={{ scale: 0.8 }}
-                    animate={{ scale: isSaved ? [1, 1.2, 1] : 1 }}
-                    transition={{ duration: 0.3 }}
-                  >
-                    <Bookmark className={`w-5 h-5 transition-colors ${isSaved ? "fill-primary text-primary" : "text-muted-foreground hover:text-primary"}`} />
-                  </motion.div>
-                </button>
+              <div className="flex items-center">
+                <div className="relative z-[20] -mt-2 -mr-1">
+                  <ShareMenu job={job} />
+                </div>
+                <button onClick={handleSaveClick} className="p-2 -mr-2 -mt-2 rounded-lg hover:bg-muted/50 backdrop-blur-sm transition-colors flex-shrink-0 relative z-[20]">
+                    <motion.div
+                      whileTap={{ scale: 0.8 }}
+                      animate={{ scale: isSaved ? [1, 1.2, 1] : 1 }}
+                      transition={{ duration: 0.3 }}
+                    >
+                      <Bookmark className={`w-5 h-5 transition-colors ${isSaved ? "fill-primary text-primary" : "text-muted-foreground hover:text-primary"}`} />
+                    </motion.div>
+                  </button>
               </div>
+            </div>
 
             {/* Job Info Details */}
             <div className="flex-1 flex flex-col min-w-0 mt-2">

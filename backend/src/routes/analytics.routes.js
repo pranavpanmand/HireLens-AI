@@ -11,5 +11,8 @@ const router = express_1.default.Router();
 
 router.use(auth_1.requireAuth);
 router.get("/skill-gap", analytics_controller_1.getSkillGapAnalytics);
+router.get("/interview-trend", analytics_controller_1.getInterviewTrend);
+router.get("/match-trend", analytics_controller_1.getMatchTrend);
+router.get("/hiring-stats", analytics_controller_1.getHiringStats);
 
 exports.default = router;

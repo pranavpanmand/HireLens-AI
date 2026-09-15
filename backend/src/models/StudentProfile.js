@@ -52,6 +52,11 @@ const studentProfileSchema = new mongoose.Schema({
         required: true,
         unique: true
     },
+    visibility: {
+        type: String,
+        enum: ['public', 'private'],
+        default: 'public'
+    },
     // Sub-documents / Arrays
     summary: { type: String },
     education: [educationSchema],

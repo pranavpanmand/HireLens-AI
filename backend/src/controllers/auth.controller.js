@@ -3,7 +3,7 @@ var __importDefault = (this && this.__importDefault) || function (mod) {
     return (mod && mod.__esModule) ? mod : { "default": mod };
 };
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.getMe = exports.logout = exports.login = exports.register = exports.googleAuth = exports.resetPassword = exports.forgotPassword = void 0;
+exports.getDeletionStats = exports.deleteAccount = exports.getMe = exports.logout = exports.login = exports.register = exports.googleAuth = exports.resetPassword = exports.forgotPassword = void 0;
 const jsonwebtoken_1 = __importDefault(require("jsonwebtoken"));
 const User_1 = require("../models/User");
 const env_1 = require("../config/env");
@@ -11,6 +11,13 @@ const firebase_1 = require("../config/firebase");
 const errorHandler_1 = require("../middleware/errorHandler");
 const email_service_1 = require("../services/email.service");
 const crypto = require("crypto");
+const { StudentProfile } = require("../models/StudentProfile");
+const { Resume } = require("../models/Resume");
+const { JobPosting } = require("../models/JobPosting");
+const { Application } = require("../models/Application");
+const { SavedJob } = require("../models/SavedJob");
+const { MockInterviewSession } = require("../models/MockInterviewSession");
+
 const generateToken = (user) => {
     const payload = {
         id: user._id.toString(),
@@ -298,4 +305,64 @@ const resetPassword = async (req, res, next) => {
     }
 };
 exports.resetPassword = resetPassword;
-//# sourceMappingURL=auth.controller.js.map
+
+const getDeletionStats = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const role = req.user.role;
+
+        const stats = {};
+        if (role === 'student') {
+            stats.resumes = await Resume.countDocuments({ student_id: userId });
+            stats.interviews = await MockInterviewSession.countDocuments({ studentId: userId });
+            stats.applications = await Application.countDocuments({ studentId: userId });
+            stats.savedJobs = await SavedJob.countDocuments({ studentId: userId });
+        } else if (role === 'recruiter') {
+            stats.jobs = await JobPosting.countDocuments({ recruiterId: userId });
+        }
+
+        res.json({ success: true, data: stats });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.getDeletionStats = getDeletionStats;
+
+const deleteAccount = async (req, res, next) => {
+    try {
+        const userId = req.user.id;
+        const user = await User_1.User.findById(userId);
+        
+        if (!user) {
+            throw new errorHandler_1.AppError('User not found', 404);
+        }
+
+        if (user.role === 'student') {
+            // Delete student specific data
+            await StudentProfile.deleteOne({ userId });
+            await Resume.deleteMany({ student_id: userId });
+            await MockInterviewSession.deleteMany({ studentId: userId });
+            await SavedJob.deleteMany({ studentId: userId });
+            
+            // Anonymize applications rather than delete, so recruiters keep aggregate stats
+            await Application.updateMany(
+                { studentId: userId }, 
+                { $unset: { studentId: "" }, status: 'rejected' }
+            );
+        } else if (user.role === 'recruiter') {
+            // Archive jobs instead of deleting to preserve student application history
+            await JobPosting.updateMany(
+                { recruiterId: userId },
+                { isActive: false }
+            );
+        }
+
+        // Finally delete the user
+        await User_1.User.findByIdAndDelete(userId);
+
+        res.json({ success: true, message: 'Account permanently deleted' });
+    } catch (error) {
+        next(error);
+    }
+};
+exports.deleteAccount = deleteAccount;

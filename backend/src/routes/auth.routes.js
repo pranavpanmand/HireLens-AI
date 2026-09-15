@@ -30,5 +30,6 @@ router.post('/forgot-password', rateLimiter_1.authLimiter, auth_controller_1.for
 router.post('/reset-password/:token', rateLimiter_1.authLimiter, auth_controller_1.resetPassword);
 router.post('/logout', auth_1.requireAuth, auth_controller_1.logout);
 router.get('/me', auth_1.requireAuth, auth_controller_1.getMe);
+router.get('/deletion-stats', auth_1.requireAuth, auth_controller_1.getDeletionStats);
+router.delete('/account', auth_1.requireAuth, auth_controller_1.deleteAccount);
 exports.default = router;
-//# sourceMappingURL=auth.routes.js.map

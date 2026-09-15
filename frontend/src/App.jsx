@@ -37,6 +37,8 @@ import VideoResume from "./pages/VideoResume";
 import AptitudeQuest from "./pages/AptitudeQuest";
 import PersonalityTest from "./pages/PersonalityTest";
 import Events from "./pages/Events";
+import DeleteAccountConfirm from "./pages/DeleteAccountConfirm";
+import AccountDeleted from "./pages/AccountDeleted";
 
 // AI Interview Coach (merged from the PrepNexa interview project)
 import InterviewHome from "./pages/interview/InterviewHome";
@@ -44,6 +46,7 @@ import InterviewSetup from "./pages/interview/InterviewSetup";
 import InterviewSession from "./pages/interview/InterviewSession";
 import InterviewReport from "./pages/interview/InterviewReport";
 import InterviewHistory from "./pages/interview/InterviewHistory";
+import MyProgress from "./pages/interview/MyProgress";
 
 import { useLocation } from "react-router-dom";
 import { AnimatePresence } from "framer-motion";
@@ -59,6 +62,13 @@ const AnimatedRoutes = () => {
       <Routes location={location} key={location.pathname}>
         <Route path="/" element={<PageTransition><Index /></PageTransition>} />
         
+        {/* Public Routes with AppLayout */}
+        <Route element={<AppLayout />}>
+          <Route path="/jobs" element={<PageTransition><Jobs /></PageTransition>} />
+          <Route path="/jobs/:id" element={<PageTransition><JobDetails /></PageTransition>} />
+          <Route path="/account-deleted" element={<PageTransition><AccountDeleted /></PageTransition>} />
+        </Route>
+        
         {/* Student Routes with AppLayout */}
         <Route element={
           <ProtectedRoute requiredRole="student">
@@ -66,8 +76,6 @@ const AnimatedRoutes = () => {
           </ProtectedRoute>
         }>
           <Route path="/dashboard" element={<PageTransition><Dashboard /></PageTransition>} />
-          <Route path="/jobs" element={<PageTransition><Jobs /></PageTransition>} />
-          <Route path="/jobs/:id" element={<PageTransition><JobDetails /></PageTransition>} />
           <Route path="/profile" element={<PageTransition><Profile /></PageTransition>} />
           <Route path="/resume-analyzer" element={<PageTransition><ResumeAnalyzer /></PageTransition>} />
           <Route path="/cover-letter" element={<PageTransition><CoverLetterGenerator /></PageTransition>} />
@@ -79,6 +87,7 @@ const AnimatedRoutes = () => {
           <Route path="/interview/session/:sessionId" element={<PageTransition><InterviewSession /></PageTransition>} />
           <Route path="/interview/report/:sessionId" element={<PageTransition><InterviewReport /></PageTransition>} />
           <Route path="/interview/history" element={<PageTransition><InterviewHistory /></PageTransition>} />
+          <Route path="/interview/progress" element={<PageTransition><MyProgress /></PageTransition>} />
           <Route path="/interview/reports" element={<PageTransition><InterviewHistory variant="reports" /></PageTransition>} />
           {/* Legacy mock-interview paths now live under /interview */}
           <Route path="/mock-interview" element={<Navigate to="/interview" replace />} />
@@ -95,6 +104,7 @@ const AnimatedRoutes = () => {
           <Route path="/aptitude-quest" element={<PageTransition><AptitudeQuest /></PageTransition>} />
           <Route path="/personality-test" element={<PageTransition><PersonalityTest /></PageTransition>} />
           <Route path="/events" element={<PageTransition><Events /></PageTransition>} />
+          <Route path="/settings/delete-account" element={<PageTransition><DeleteAccountConfirm /></PageTransition>} />
         </Route>
         <Route
           path="/recruiter"

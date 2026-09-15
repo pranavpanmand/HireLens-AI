@@ -16,9 +16,9 @@ import { Select, SelectContent, SelectItem, SelectTrigger, SelectValue } from "@
 import { toast } from "react-toastify";
 import {
   Plus, Briefcase, MapPin, DollarSign, Clock, Users, Loader2,
-  BarChart3, TrendingUp, Copy, Trash2, ToggleLeft, ToggleRight,
   Globe, Building2, Eye
 } from "lucide-react";
+import { RecruiterAnalytics } from "@/components/dashboard/RecruiterAnalytics";
 
 const EMPTY_JOB = {
   title: "",

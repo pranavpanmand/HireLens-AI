@@ -15,6 +15,7 @@ import {
 import { GlobalLoader } from "@/components/ui/GlobalLoader";
 import { StaggeredText } from "@/components/ui/StaggeredText";
 import { Reveal } from "@/components/ui/Reveal";
+import { StudentAnalytics } from "@/components/dashboard/StudentAnalytics";
 import { ResumeUploader } from "@/components/resume/ResumeUploader";
 import { 
   BasicInfoModal, CareerPreferencesModal, SkillsModal, EducationModal, 
@@ -228,6 +229,8 @@ const Dashboard = () => {
               </TabsList>
 
               <TabsContent value="jobs" className="space-y-6 mt-0">
+                <StudentAnalytics />
+                
                 {/* Application Status Panel */}
                 <Card className="border-border shadow-sm">
                   <CardHeader className="pb-3 flex flex-row items-center justify-between">

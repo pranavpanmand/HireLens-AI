@@ -1,4 +1,5 @@
 import { useState } from "react";
+import { useNavigate } from "react-router-dom";
 import { motion } from "framer-motion";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
@@ -6,7 +7,7 @@ import { useAuth } from "@/contexts/AuthContext";
 import { useProfile, useUploadPhoto, useDeletePhoto } from "@/hooks/useProfile";
 import { BasicInfoModal, CareerPreferencesModal, SkillsModal, EducationModal, ExperienceModal, ProjectsModal, SummaryModal, LanguagesModal, AccomplishmentsModal } from "@/components/profile/ProfileEditModals";
 import { ResumeUploader } from "@/components/resume/ResumeUploader";
-import { Edit2, Plus, MapPin, Phone, Mail, FileText, CheckCircle2 } from "lucide-react";
+import { Edit2, Plus, MapPin, Phone, Mail, FileText, CheckCircle2, AlertCircle } from "lucide-react";
 import { Button } from "@/components/ui/button";
 import { useResumes, useUploadResume } from "@/hooks/useResumes";
 import { StaggeredText } from "@/components/ui/StaggeredText";
@@ -21,11 +22,13 @@ const SECTIONS = [
   { id: "skills", label: "Key skills" },
   { id: "languages", label: "Languages" },
   { id: "accomplishments", label: "Accomplishments" },
-  { id: "resume", label: "Resume" }
+  { id: "resume", label: "Resume" },
+  { id: "danger-zone", label: "Danger Zone" }
 ];
 
 export default function Profile() {
   const { user } = useAuth();
+  const navigate = useNavigate();
   const { data: profile, isLoading } = useProfile();
   const uploadPhoto = useUploadPhoto();
   const deletePhoto = useDeletePhoto();
@@ -419,6 +422,27 @@ export default function Profile() {
                       onUpload={handleResumeUpload}
                       onView={!!primaryResume?.cloudinary_url}
                     />
+                  </div>
+                </section>
+
+                {/* Danger Zone */}
+                <section id="danger-zone" className="bg-red-50/50 dark:bg-red-950/20 rounded-2xl p-6 shadow-sm border border-red-200 dark:border-red-900/50 mt-8">
+                  <div className="flex items-start gap-4">
+                    <div className="p-3 bg-red-100 dark:bg-red-900/50 rounded-xl flex-shrink-0">
+                      <AlertCircle className="w-6 h-6 text-red-600 dark:text-red-400" />
+                    </div>
+                    <div>
+                      <h2 className="text-lg font-bold text-red-700 dark:text-red-400">Danger Zone</h2>
+                      <p className="text-muted-foreground text-sm mt-1 mb-4">
+                        Permanently delete your account and all associated data. This action cannot be undone.
+                      </p>
+                      <Button 
+                        variant="destructive" 
+                        onClick={() => navigate('/settings/delete-account')}
+                      >
+                        Delete My Account
+                      </Button>
+                    </div>
                   </div>
                 </section>
               </div>

@@ -22,4 +22,13 @@ router.get('/job/:jobId', auth_1.requireAuth, (0, auth_1.requireRole)('recruiter
 // Update application status (Recruiter only)
 router.put('/:applicationId/status', auth_1.requireAuth, (0, auth_1.requireRole)('recruiter'), applications_controller_1.updateApplicationStatus);
 
+// Get applicant profile (Recruiter only)
+router.get('/:applicationId/profile', auth_1.requireAuth, (0, auth_1.requireRole)('recruiter'), applications_controller_1.getApplicantProfile);
+
+// Send message to applicant (Recruiter only)
+router.post('/:applicationId/message', auth_1.requireAuth, (0, auth_1.requireRole)('recruiter'), applications_controller_1.sendMessage);
+
+// Get message history for application (Recruiter only)
+router.get('/:applicationId/messages', auth_1.requireAuth, (0, auth_1.requireRole)('recruiter'), applications_controller_1.getMessages);
+
 exports.default = router;

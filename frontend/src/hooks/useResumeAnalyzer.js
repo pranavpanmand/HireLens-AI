@@ -5,7 +5,7 @@ export const useResumeAnalyzer = () => {
   return useMutation({
     mutationFn: async () => {
       const response = await fetchApi("/ai/resume/analyze", { method: "POST" });
-      return response.data;
+      return response;
     }
   });
 };

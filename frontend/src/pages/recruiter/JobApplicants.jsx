@@ -12,6 +12,8 @@ import { toast } from "react-toastify";
 import { Navbar } from "@/components/layout/Navbar";
 import { Footer } from "@/components/layout/Footer";
 import { API_URL } from "@/services/api";
+import { ApplicantProfileModal } from "@/components/recruiter/ApplicantProfileModal";
+import { MessageCandidateModal } from "@/components/recruiter/MessageCandidateModal";
 
 const PIPELINE_STAGES = [
   { key: "applied", label: "Applied", color: "bg-gray-100 text-gray-800 border-gray-200", dotColor: "bg-gray-400" },
@@ -29,6 +31,19 @@ export default function JobApplicants() {
   const [selectedIds, setSelectedIds] = useState(new Set());
   const [activeStageFilter, setActiveStageFilter] = useState("all");
 
+  const [profileModalAppId, setProfileModalAppId] = useState(null);
+  const [messageModalState, setMessageModalState] = useState({ isOpen: false, applicationId: null, candidate: null });
+
+  const handleOpenProfile = (appId) => setProfileModalAppId(appId);
+  const handleCloseProfile = () => setProfileModalAppId(null);
+  
+  const handleOpenMessage = (appId, candidate) => {
+    setMessageModalState({ isOpen: true, applicationId: appId, candidate });
+  };
+  const handleCloseMessage = () => {
+    setMessageModalState({ isOpen: false, applicationId: null, candidate: null });
+  };
+
   const { data: response, isLoading } = useQuery({
     queryKey: ['job-applicants', jobId],
     queryFn: async () => {
@@ -44,7 +59,7 @@ export default function JobApplicants() {
   const applicants = response?.data || [];
 
   const updateStatus = useMutation({
-    mutationFn: async ({ applicationId, status }) => {
+    mutationFn: async ({ applicationId, status, note }) => {
       const res = await fetch(`${API_URL}/applications/${applicationId}/status`, {
         method: 'PUT',
         credentials: 'include',
@@ -52,7 +67,7 @@ export default function JobApplicants() {
           'Content-Type': 'application/json',
           'Authorization': `Bearer ${localStorage.getItem('token')}`
         },
-        body: JSON.stringify({ status })
+        body: JSON.stringify({ status, note })
       });
       if (!res.ok) throw new Error('Failed to update status');
       return res.json();
@@ -271,9 +286,11 @@ export default function JobApplicants() {
                         </div>
 
                         {/* Info */}
-                        <div className="flex-1 min-w-0">
+                        <div className="flex-1 min-w-0 cursor-pointer group" onClick={() => handleOpenProfile(application._id)}>
                           <div className="flex items-center gap-2 flex-wrap">
-                            <h3 className="font-semibold text-foreground">{application.studentId?.fullName}</h3>
+                            <h3 className="font-semibold text-foreground group-hover:text-primary transition-colors">
+                              {application.studentId?.fullName}
+                            </h3>
                             <Badge variant="outline" className={`capitalize text-[10px] ${stageInfo.color}`}>
                               {stageInfo.label}
                             </Badge>
@@ -288,12 +305,24 @@ export default function JobApplicants() {
                               target="_blank"
                               rel="noopener noreferrer"
                               className="inline-flex items-center gap-1 text-xs text-primary hover:underline mt-2"
+                              onClick={(e) => e.stopPropagation()}
                             >
                               <FileText className="w-3.5 h-3.5" />
                               View Resume
                               <ExternalLink className="w-3 h-3" />
                             </a>
                           )}
+                          <Button 
+                            variant="link" 
+                            size="sm" 
+                            className="h-auto p-0 ml-4 text-xs text-muted-foreground hover:text-foreground inline-flex items-center gap-1 mt-2"
+                            onClick={(e) => {
+                              e.stopPropagation();
+                              handleOpenMessage(application._id, application.studentId);
+                            }}
+                          >
+                            <Mail className="w-3 h-3" /> Message
+                          </Button>
                         </div>
 
                         {/* Match Score */}
@@ -315,7 +344,12 @@ export default function JobApplicants() {
                               variant="ghost"
                               size="sm"
                               className={`text-[11px] h-7 px-2 justify-start`}
-                              onClick={() => updateStatus.mutate({ applicationId: application._id, status: stage.key })}
+                              onClick={() => {
+                                const note = window.prompt(`Add an optional personal note for ${application.studentId.fullName} (leave blank to skip):`);
+                                if (note !== null) {
+                                  updateStatus.mutate({ applicationId: application._id, status: stage.key, note });
+                                }
+                              }}
                               disabled={updateStatus.isPending}
                             >
                               <span className={`w-1.5 h-1.5 rounded-full ${stage.dotColor} mr-1.5`} />
@@ -332,6 +366,23 @@ export default function JobApplicants() {
           )}
         </div>
       </main>
+
+      <ApplicantProfileModal 
+        isOpen={!!profileModalAppId}
+        applicationId={profileModalAppId}
+        onClose={handleCloseProfile}
+        onMessageClick={(appId, candidate) => {
+          handleCloseProfile();
+          handleOpenMessage(appId, candidate);
+        }}
+      />
+      
+      <MessageCandidateModal 
+        isOpen={messageModalState.isOpen}
+        applicationId={messageModalState.applicationId}
+        candidate={messageModalState.candidate}
+        onClose={handleCloseMessage}
+      />
 
       <Footer />
     </div>

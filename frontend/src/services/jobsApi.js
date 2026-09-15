@@ -33,6 +33,9 @@ export const jobsApi = {
   getMyPostings: () =>
   fetchApi('/recruiter/jobs'),
 
+  getRecruiterStats: () =>
+  fetchApi('/recruiter/stats'),
+
   createPosting: (data) =>
   fetchApi('/recruiter/jobs', {
     method: 'POST',

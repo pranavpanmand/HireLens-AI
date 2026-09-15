@@ -248,16 +248,22 @@ export const JobFilters = ({ filters, onFiltersChange, onSearch, totalJobs, sort
       <div>
         <h4 className="text-sm font-semibold text-foreground mb-3">Source</h4>
         <div className="flex flex-wrap gap-2">
-          {["All", "Adzuna", "Arbeitnow", "Remotive"].map(s => (
+          {[
+            { label: "All", value: "All" },
+            { label: "✦ Direct Apply", value: "internal" },
+            { label: "Adzuna", value: "Adzuna" },
+            { label: "Arbeitnow", value: "Arbeitnow" },
+            { label: "Remotive", value: "Remotive" },
+          ].map(s => (
             <button
-              key={s}
-              onClick={() => updateFilter("source", s)}
+              key={s.value}
+              onClick={() => updateFilter("source", s.value)}
               className={`px-3 py-1.5 rounded-full text-xs font-medium transition-all ${
-                filters.source === s
+                filters.source === s.value
                   ? "bg-primary text-primary-foreground shadow-sm"
                   : "bg-muted text-muted-foreground hover:bg-muted/80"
               }`}
-            >{s}</button>
+            >{s.label}</button>
           ))}
         </div>
       </div>

@@ -54,10 +54,57 @@ export const useCreateJob = () => {
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["jobs"] });
       queryClient.invalidateQueries({ queryKey: ["recruiter-jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["recruiter-stats"] });
       toast.success("Job posted successfully!");
     },
     onError: (error) => {
       toast.error("Failed to post job: " + error.message);
+    }
+  });
+};
+
+export const useRecruiterStats = () => {
+  const { user } = useAuth();
+  return useQuery({
+    queryKey: ["recruiter-stats", user?.id],
+    queryFn: () => jobsApi.getRecruiterStats(),
+    enabled: !!user,
+    staleTime: 30_000,
+  });
+};
+
+export const useUpdateJob = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async ({ id, data }) => {
+      const updated = await jobsApi.updatePosting(id, data);
+      return mapJob(updated);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recruiter-jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["recruiter-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+    },
+    onError: (error) => {
+      toast.error("Update failed: " + error.message);
+    }
+  });
+};
+
+export const useDeleteJob = () => {
+  const queryClient = useQueryClient();
+  return useMutation({
+    mutationFn: async (id) => {
+      await jobsApi.deletePosting(id);
+    },
+    onSuccess: () => {
+      queryClient.invalidateQueries({ queryKey: ["recruiter-jobs"] });
+      queryClient.invalidateQueries({ queryKey: ["recruiter-stats"] });
+      queryClient.invalidateQueries({ queryKey: ["jobs"] });
+      toast.success("Job deleted successfully");
+    },
+    onError: (error) => {
+      toast.error("Delete failed: " + error.message);
     }
   });
 };

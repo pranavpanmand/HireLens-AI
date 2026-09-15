@@ -7,8 +7,8 @@ const router = (0, express_1.Router)();
 // All routes require auth AND recruiter role
 router.use(auth_1.requireAuth, (0, auth_1.requireRole)('recruiter'));
 router.get('/jobs', recruiter_controller_1.getMyJobs);
+router.get('/stats', recruiter_controller_1.getRecruiterStats);
 router.post('/jobs', recruiter_controller_1.createJob);
 router.put('/jobs/:id', recruiter_controller_1.updateJob);
 router.delete('/jobs/:id', recruiter_controller_1.deleteJob);
 exports.default = router;
-//# sourceMappingURL=recruiter.routes.js.map

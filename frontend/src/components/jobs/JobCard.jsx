@@ -95,9 +95,15 @@ export const JobCard = ({ job, onAnalyze, index = 0 }) => {
               {/* Meta Info */}
               <div className="flex flex-wrap items-center gap-4 mt-3 text-sm text-muted-foreground">
                 {job.source && (
-                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                    {job.source}
-                  </Badge>
+                  job.source === 'internal' ? (
+                    <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 font-semibold text-[11px]">
+                      ✦ Direct Apply
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20 text-[11px]">
+                      {job.source}
+                    </Badge>
+                  )
                 )}
                 {job.match_score >= 80 && (
                   <Badge className="bg-amber-500 hover:bg-amber-600 text-white border-transparent font-bold">

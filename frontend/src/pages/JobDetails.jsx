@@ -215,9 +215,15 @@ export default function JobDetails() {
                   <span>{formattedDate}</span>
                 </div>
                 {job.source && (
-                  <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
-                    {job.source}
-                  </Badge>
+                  job.source === 'internal' ? (
+                    <Badge className="bg-emerald-500/15 text-emerald-600 border-emerald-500/30 font-semibold">
+                      ✦ Direct Apply
+                    </Badge>
+                  ) : (
+                    <Badge variant="outline" className="bg-primary/5 text-primary border-primary/20">
+                      {job.source}
+                    </Badge>
+                  )
                 )}
               </div>
 

@@ -1,7 +1,8 @@
 "use strict";
 Object.defineProperty(exports, "__esModule", { value: true });
-exports.deleteJob = exports.updateJob = exports.createJob = exports.getMyJobs = void 0;
+exports.getRecruiterStats = exports.deleteJob = exports.updateJob = exports.createJob = exports.getMyJobs = void 0;
 const JobPosting_1 = require("../models/JobPosting");
+const Application_1 = require("../models/Application");
 const errorHandler_1 = require("../middleware/errorHandler");
 const getMyJobs = async (req, res, next) => {
     try {
@@ -17,7 +18,7 @@ const getMyJobs = async (req, res, next) => {
 exports.getMyJobs = getMyJobs;
 const createJob = async (req, res, next) => {
     try {
-        const { title, company, location, salaryRange, jobType, description, requirements, skills } = req.body;
+        const { title, company, location, salaryRange, jobType, workMode, experienceLevel, description, requirements, skills, applyUrl, deadline } = req.body;
         const newJob = await JobPosting_1.JobPosting.create({
             recruiterId: req.user.id,
             title,
@@ -25,11 +26,15 @@ const createJob = async (req, res, next) => {
             location,
             salaryRange,
             jobType,
+            workMode: workMode || null,
+            experienceLevel: experienceLevel || null,
             description,
             requirements: requirements || [],
             skills: skills || [],
-            source: 'internal', // Mark as internally created
+            applyUrl: applyUrl || null,
+            source: 'internal',
             isActive: true,
+            postedAt: new Date(),
         });
         res.status(201).json({ success: true, data: newJob });
     }
@@ -67,4 +72,36 @@ const deleteJob = async (req, res, next) => {
     }
 };
 exports.deleteJob = deleteJob;
-//# sourceMappingURL=recruiter.controller.js.map
+
+const getRecruiterStats = async (req, res, next) => {
+    try {
+        const jobs = await JobPosting_1.JobPosting.find({ recruiterId: req.user.id }).select('_id isActive').lean();
+        const jobIds = jobs.map(j => j._id);
+        const totalJobs = jobs.length;
+        const activeJobs = jobs.filter(j => j.isActive).length;
+
+        const applications = await Application_1.Application.find({ jobId: { $in: jobIds } }).lean();
+        const totalApplicants = applications.length;
+        const avgMatchScore = totalApplicants > 0
+            ? Math.round(applications.reduce((sum, a) => sum + (a.matchScore || 0), 0) / totalApplicants)
+            : 0;
+
+        // Per-job breakdown
+        const perJob = {};
+        applications.forEach(app => {
+            const jid = app.jobId.toString();
+            if (!perJob[jid]) perJob[jid] = { count: 0, totalScore: 0 };
+            perJob[jid].count++;
+            perJob[jid].totalScore += app.matchScore || 0;
+        });
+
+        res.json({
+            success: true,
+            data: { totalJobs, activeJobs, totalApplicants, avgMatchScore, perJob }
+        });
+    }
+    catch (error) {
+        next(error);
+    }
+};
+exports.getRecruiterStats = getRecruiterStats;

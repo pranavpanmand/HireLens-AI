@@ -27,6 +27,8 @@ export default function MyApplications() {
   const getStatusBadge = (status) => {
     switch (status) {
       case 'shortlisted': return <Badge className="bg-green-100 text-green-800 hover:bg-green-100">Shortlisted</Badge>;
+      case 'interview_scheduled': return <Badge className="bg-violet-100 text-violet-800 hover:bg-violet-100">Interview Scheduled</Badge>;
+      case 'offered': return <Badge className="bg-amber-100 text-amber-800 hover:bg-amber-100">Offered 🎉</Badge>;
       case 'rejected': return <Badge className="bg-red-100 text-red-800 hover:bg-red-100">Rejected</Badge>;
       case 'reviewed': return <Badge className="bg-blue-100 text-blue-800 hover:bg-blue-100">Reviewed</Badge>;
       default: return <Badge className="bg-gray-100 text-gray-800 hover:bg-gray-100">Applied</Badge>;
